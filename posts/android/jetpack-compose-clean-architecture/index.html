@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jetpack Compose + Clean Architecture: 대규모 앱을 위한 아키텍처 설계 | ChanDev</title>
+    <meta name="description" content="실제 프로덕션 앱에서 Jetpack Compose와 Clean Architecture를 결합하여 유지보수성과 테스트 용이성을 극대화한 아키텍처 설계 방법">
+    <meta name="author" content="Chansaem Lee">
+    <meta name="keywords" content="Jetpack Compose, Clean Architecture, Android, Kotlin, Hilt, Multi-module">
+    
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Jetpack Compose + Clean Architecture: 대규모 앱을 위한 아키텍처 설계">
+    <meta property="og:description" content="실제 프로덕션 앱에서 Jetpack Compose와 Clean Architecture를 결합한 아키텍처 설계">
+    <meta property="og:url" content="https://inyion.github.io/posts/android/jetpack-compose-clean-architecture/">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/modern.css">
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ChanDev</span>
+                </a>
+                <nav>
+                    <ul class="nav-menu" id="navMenu">
+                        <li><a href="/" class="nav-link">Home</a></li>
+                        <li><a href="/categories/" class="nav-link">Categories</a></li>
+                        <li><a href="/archives/" class="nav-link">Archives</a></li>
+                        <li><a href="/#about" class="nav-link">About</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="post-page">
+        <article>
+            <div class="post-header">
+                <div class="container">
+                    <span class="post-category android">
+                        <i class="fa-brands fa-android"></i> Android
+                    </span>
+                    <h1 class="post-title">Jetpack Compose + Clean Architecture: 대규모 앱을 위한 아키텍처 설계</h1>
+                    <div class="post-meta">
+                        <span class="post-meta-item">
+                            <i class="fa fa-calendar"></i>
+                            2024년 12월 1일
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-clock"></i>
+                            15 min read
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-user"></i>
+                            Chansaem Lee
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                <div class="container container-narrow">
+                    <div class="post-body">
+                        <p>
+                            대규모 Android 앱을 개발할 때 가장 중요한 것은 <strong>확장 가능하고 유지보수하기 쉬운 아키텍처</strong>입니다. 
+                            이 글에서는 Jetpack Compose와 Clean Architecture를 결합하여 실제 프로덕션 환경에서 
+                            검증된 아키텍처 패턴을 공유합니다.
+                        </p>
+                        
+                        <div class="toc">
+                            <h4 class="toc-title">📑 Table of Contents</h4>
+                            <ul class="toc-list">
+                                <li><a href="#why-clean-architecture">왜 Clean Architecture인가?</a></li>
+                                <li><a href="#multi-module">Multi-module 프로젝트 구조</a></li>
+                                <li><a href="#domain-layer">Domain Layer 설계</a></li>
+                                <li><a href="#data-layer">Data Layer 구현</a></li>
+                                <li><a href="#presentation-layer">Presentation Layer와 Compose</a></li>
+                                <li><a href="#di-strategy">의존성 주입 전략</a></li>
+                                <li><a href="#state-management">State Management 패턴</a></li>
+                                <li><a href="#testing">테스트 전략</a></li>
+                            </ul>
+                        </div>
+                        
+                        <h2 id="why-clean-architecture">왜 Clean Architecture인가?</h2>
+                        
+                        <p>
+                            Clean Architecture는 Robert C. Martin(Uncle Bob)이 제안한 아키텍처 패턴으로, 
+                            <strong>관심사의 분리(Separation of Concerns)</strong>를 핵심 원칙으로 합니다. 
+                            Android 개발에서 이를 적용하면 다음과 같은 이점을 얻을 수 있습니다:
+                        </p>
+                        
+                        <ul>
+                            <li><strong>테스트 용이성</strong>: 각 레이어를 독립적으로 테스트할 수 있습니다</li>
+                            <li><strong>유연한 UI 변경</strong>: UI 프레임워크(XML → Compose) 전환이 쉽습니다</li>
+                            <li><strong>비즈니스 로직 보호</strong>: 핵심 로직이 프레임워크에 의존하지 않습니다</li>
+                            <li><strong>팀 협업 효율화</strong>: 모듈별로 작업 분담이 명확해집니다</li>
+                        </ul>
+                        
+                        <h2 id="multi-module">Multi-module 프로젝트 구조</h2>
+                        
+                        <p>대규모 앱에서는 단일 모듈 구조의 한계가 명확합니다. Multi-module 구조를 통해 빌드 시간 단축과 코드 재사용성을 높일 수 있습니다.</p>
+                        
+                        <pre><code>📦 project-root
+├── 📁 app                    # Application module
+├── 📁 core
+│   ├── 📁 common             # 공통 유틸, 확장 함수
+│   ├── 📁 designsystem       # Compose Design System
+│   ├── 📁 network            # Retrofit, OkHttp 설정
+│   └── 📁 database           # Room Database
+├── 📁 domain
+│   ├── 📁 model              # 비즈니스 모델
+│   ├── 📁 repository         # Repository 인터페이스
+│   └── 📁 usecase            # Use Cases
+├── 📁 data
+│   ├── 📁 repository         # Repository 구현체
+│   └── 📁 datasource         # Remote/Local DataSource
+└── 📁 feature
+    ├── 📁 home               # 홈 화면 Feature
+    ├── 📁 profile            # 프로필 Feature
+    └── 📁 settings           # 설정 Feature</code></pre>
+                        
+                        <p><strong>모듈 간 의존성 규칙</strong>을 철저히 지켜야 합니다:</p>
+                        
+                        <pre><code class="language-kotlin">// feature 모듈의 build.gradle.kts
+dependencies {
+    implementation(project(":core:designsystem"))
+    implementation(project(":core:common"))
+    implementation(project(":domain:usecase"))
+    // ❌ data 모듈 직접 의존 금지!
+}</code></pre>
+                        
+                        <h2 id="domain-layer">Domain Layer 설계</h2>
+                        
+                        <p>Domain Layer는 비즈니스 로직의 핵심입니다. 어떤 프레임워크에도 의존하지 않는 순수 Kotlin 코드로 작성합니다.</p>
+                        
+                        <h3>Entity 모델 정의</h3>
+                        
+                        <pre><code class="language-kotlin">// domain/model/User.kt
+data class User(
+    val id: String,
+    val name: String,
+    val email: String,
+    val profileImageUrl: String?,
+    val createdAt: LocalDateTime
+) {
+    val displayName: String
+        get() = name.ifBlank { email.substringBefore("@") }
+    
+    fun isEmailVerified(): Boolean = 
+        email.isNotBlank() && email.contains("@")
+}</code></pre>
+                        
+                        <h3>Repository 인터페이스</h3>
+                        
+                        <pre><code class="language-kotlin">// domain/repository/UserRepository.kt
+interface UserRepository {
+    suspend fun getUser(id: String): Result&lt;User&gt;
+    suspend fun updateUser(user: User): Result&lt;Unit&gt;
+    fun observeUser(id: String): Flow&lt;User&gt;
+}</code></pre>
+                        
+                        <h3>UseCase 패턴</h3>
+                        
+                        <pre><code class="language-kotlin">// domain/usecase/GetUserProfileUseCase.kt
+class GetUserProfileUseCase @Inject constructor(
+    private val userRepository: UserRepository,
+    private val analyticsRepository: AnalyticsRepository
+) {
+    suspend operator fun invoke(userId: String): Result&lt;UserProfile&gt; {
+        return runCatching {
+            val user = userRepository.getUser(userId).getOrThrow()
+            val stats = analyticsRepository.getUserStats(userId).getOrThrow()
+            
+            UserProfile(
+                user = user,
+                postsCount = stats.postsCount,
+                followersCount = stats.followersCount
+            )
+        }
+    }
+}</code></pre>
+                        
+                        <blockquote>
+                            <p>💡 <strong>Tip</strong>: UseCase는 단일 책임 원칙을 따릅니다. 하나의 UseCase는 하나의 비즈니스 작업만 수행해야 합니다.</p>
+                        </blockquote>
+                        
+                        <h2 id="data-layer">Data Layer 구현</h2>
+                        
+                        <p>Data Layer는 Domain Layer에서 정의한 Repository 인터페이스를 구현합니다.</p>
+                        
+                        <h3>Repository 구현</h3>
+                        
+                        <pre><code class="language-kotlin">// data/repository/UserRepositoryImpl.kt
+class UserRepositoryImpl @Inject constructor(
+    private val remoteDataSource: UserRemoteDataSource,
+    private val localDataSource: UserLocalDataSource,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+) : UserRepository {
+
+    override suspend fun getUser(id: String): Result&lt;User&gt; = 
+        withContext(ioDispatcher) {
+            runCatching {
+                // Local-first 전략
+                localDataSource.getUser(id)?.toDomain()
+                    ?: fetchAndCacheUser(id)
+            }
+        }
+    
+    private suspend fun fetchAndCacheUser(id: String): User {
+        val userDto = remoteDataSource.fetchUser(id)
+        localDataSource.insertUser(userDto.toEntity())
+        return userDto.toDomain()
+    }
+    
+    override fun observeUser(id: String): Flow&lt;User&gt; = 
+        localDataSource.observeUser(id)
+            .map { it.toDomain() }
+            .flowOn(ioDispatcher)
+}</code></pre>
+                        
+                        <h3>Mapper 패턴</h3>
+                        
+                        <pre><code class="language-kotlin">// data/mapper/UserMapper.kt
+fun UserDto.toDomain(): User = User(
+    id = this.id,
+    name = this.name,
+    email = this.email,
+    profileImageUrl = this.avatarUrl,
+    createdAt = LocalDateTime.parse(this.createdAt)
+)
+
+fun UserEntity.toDomain(): User = User(
+    id = this.id,
+    name = this.name,
+    email = this.email,
+    profileImageUrl = this.profileImageUrl,
+    createdAt = this.createdAt
+)</code></pre>
+                        
+                        <h2 id="presentation-layer">Presentation Layer와 Compose</h2>
+                        
+                        <p>Jetpack Compose와 함께 MVI(Model-View-Intent) 패턴을 적용하면 상태 관리가 명확해집니다.</p>
+                        
+                        <h3>UI State 정의</h3>
+                        
+                        <pre><code class="language-kotlin">// feature/profile/ProfileContract.kt
+data class ProfileUiState(
+    val isLoading: Boolean = false,
+    val user: User? = null,
+    val error: String? = null
+) {
+    val isError: Boolean get() = error != null
+}
+
+sealed interface ProfileEvent {
+    data class LoadProfile(val userId: String) : ProfileEvent
+    object Refresh : ProfileEvent
+    object RetryClick : ProfileEvent
+}
+
+sealed interface ProfileSideEffect {
+    data class ShowSnackbar(val message: String) : ProfileSideEffect
+    data class NavigateTo(val route: String) : ProfileSideEffect
+}</code></pre>
+                        
+                        <h3>ViewModel 구현</h3>
+                        
+                        <pre><code class="language-kotlin">// feature/profile/ProfileViewModel.kt
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val getUserProfileUseCase: GetUserProfileUseCase,
+    savedStateHandle: SavedStateHandle
+) : ViewModel() {
+
+    private val userId: String = savedStateHandle.get&lt;String&gt;("userId") 
+        ?: throw IllegalArgumentException("userId is required")
+
+    private val _uiState = MutableStateFlow(ProfileUiState())
+    val uiState: StateFlow&lt;ProfileUiState&gt; = _uiState.asStateFlow()
+
+    private val _sideEffect = Channel&lt;ProfileSideEffect&gt;()
+    val sideEffect: Flow&lt;ProfileSideEffect&gt; = _sideEffect.receiveAsFlow()
+
+    init {
+        onEvent(ProfileEvent.LoadProfile(userId))
+    }
+
+    fun onEvent(event: ProfileEvent) {
+        when (event) {
+            is ProfileEvent.LoadProfile -> loadProfile(event.userId)
+            ProfileEvent.Refresh -> loadProfile(userId)
+            ProfileEvent.RetryClick -> loadProfile(userId)
+        }
+    }
+
+    private fun loadProfile(userId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            
+            getUserProfileUseCase(userId)
+                .onSuccess { profile ->
+                    _uiState.update { 
+                        it.copy(isLoading = false, user = profile.user) 
+                    }
+                }
+                .onFailure { throwable ->
+                    _uiState.update { 
+                        it.copy(isLoading = false, error = throwable.message) 
+                    }
+                    _sideEffect.send(
+                        ProfileSideEffect.ShowSnackbar("Failed to load profile")
+                    )
+                }
+        }
+    }
+}</code></pre>
+                        
+                        <h3>Compose UI</h3>
+                        
+                        <pre><code class="language-kotlin">// feature/profile/ProfileScreen.kt
+@Composable
+fun ProfileScreen(
+    viewModel: ProfileViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    LaunchedEffect(Unit) {
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                is ProfileSideEffect.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(effect.message)
+                }
+                is ProfileSideEffect.NavigateTo -> {
+                    // Navigate
+                }
+            }
+        }
+    }
+    
+    ProfileContent(
+        uiState = uiState,
+        snackbarHostState = snackbarHostState,
+        onRefresh = { viewModel.onEvent(ProfileEvent.Refresh) },
+        onRetry = { viewModel.onEvent(ProfileEvent.RetryClick) },
+        onNavigateBack = onNavigateBack
+    )
+}
+
+@Composable
+private fun ProfileContent(
+    uiState: ProfileUiState,
+    snackbarHostState: SnackbarHostState,
+    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
+    onNavigateBack: () -> Unit
+) {
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Profile") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            when {
+                uiState.isLoading -> LoadingIndicator()
+                uiState.isError -> ErrorView(
+                    message = uiState.error ?: "Unknown error",
+                    onRetry = onRetry
+                )
+                uiState.user != null -> ProfileDetail(user = uiState.user)
+            }
+        }
+    }
+}</code></pre>
+                        
+                        <h2 id="di-strategy">의존성 주입 전략</h2>
+                        
+                        <p>Hilt를 사용한 DI 설정입니다. 모듈별로 명확하게 분리합니다.</p>
+                        
+                        <pre><code class="language-kotlin">// core/network/di/NetworkModule.kt
+@Module
+@InstallIn(SingletonComponent::class)
+object NetworkModule {
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            })
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(BuildConfig.API_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
+            .build()
+    }
+}
+
+// data/di/RepositoryModule.kt
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class RepositoryModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindUserRepository(
+        impl: UserRepositoryImpl
+    ): UserRepository
+}</code></pre>
+                        
+                        <h2 id="state-management">State Management 패턴</h2>
+                        
+                        <p>Compose에서 효과적인 상태 관리를 위한 패턴들입니다.</p>
+                        
+                        <h3>State Hoisting</h3>
+                        
+                        <pre><code class="language-kotlin">// Stateless Composable
+@Composable
+fun UserCard(
+    user: User,
+    isExpanded: Boolean,
+    onExpandClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(modifier = modifier) {
+        // UI 렌더링
+    }
+}
+
+// Stateful Container
+@Composable
+fun UserCardContainer(user: User) {
+    var isExpanded by remember { mutableStateOf(false) }
+    
+    UserCard(
+        user = user,
+        isExpanded = isExpanded,
+        onExpandClick = { isExpanded = !isExpanded }
+    )
+}</code></pre>
+                        
+                        <h3>리컴포지션 최적화</h3>
+                        
+                        <pre><code class="language-kotlin">// ❌ Bad: 불필요한 리컴포지션 발생
+@Composable
+fun UserList(users: List&lt;User&gt;) {
+    LazyColumn {
+        items(users) { user ->
+            UserItem(user)
+        }
+    }
+}
+
+// ✅ Good: key를 사용한 최적화
+@Composable
+fun UserList(users: List&lt;User&gt;) {
+    LazyColumn {
+        items(
+            items = users,
+            key = { it.id }  // Stable key
+        ) { user ->
+            UserItem(user)
+        }
+    }
+}
+
+// ✅ Immutable 어노테이션 활용
+@Immutable
+data class UserUiModel(
+    val id: String,
+    val name: String,
+    val avatarUrl: String
+)</code></pre>
+                        
+                        <h2 id="testing">테스트 전략</h2>
+                        
+                        <p>Clean Architecture의 가장 큰 장점 중 하나는 <strong>테스트 용이성</strong>입니다.</p>
+                        
+                        <h3>UseCase 단위 테스트</h3>
+                        
+                        <pre><code class="language-kotlin">@Test
+fun `getUser returns success when repository succeeds`() = runTest {
+    // Given
+    val expectedUser = User(id = "1", name = "John", ...)
+    coEvery { userRepository.getUser("1") } returns Result.success(expectedUser)
+    
+    // When
+    val result = getUserUseCase("1")
+    
+    // Then
+    assertTrue(result.isSuccess)
+    assertEquals(expectedUser, result.getOrNull())
+}
+
+@Test
+fun `getUser returns failure when repository fails`() = runTest {
+    // Given
+    val exception = IOException("Network error")
+    coEvery { userRepository.getUser("1") } returns Result.failure(exception)
+    
+    // When
+    val result = getUserUseCase("1")
+    
+    // Then
+    assertTrue(result.isFailure)
+}</code></pre>
+                        
+                        <h3>ViewModel 테스트</h3>
+                        
+                        <pre><code class="language-kotlin">@Test
+fun `loadProfile updates uiState with user on success`() = runTest {
+    // Given
+    val user = User(id = "1", name = "John", ...)
+    coEvery { getUserProfileUseCase("1") } returns Result.success(UserProfile(user, ...))
+    
+    // When
+    val viewModel = ProfileViewModel(getUserProfileUseCase, savedStateHandle)
+    
+    // Then
+    val state = viewModel.uiState.value
+    assertFalse(state.isLoading)
+    assertEquals(user, state.user)
+    assertNull(state.error)
+}</code></pre>
+                        
+                        <h2>마무리</h2>
+                        
+                        <p>
+                            Clean Architecture와 Jetpack Compose의 조합은 대규모 Android 앱 개발에서 
+                            강력한 시너지를 발휘합니다. 초기 설정에 시간이 걸리지만, 장기적으로 
+                            <strong>유지보수 비용 절감</strong>과 <strong>팀 생산성 향상</strong>에 크게 기여합니다.
+                        </p>
+                        
+                        <p>
+                            다음 글에서는 이 아키텍처를 기반으로 <strong>Kotlin Coroutines & Flow</strong>를 
+                            활용한 비동기 처리 패턴에 대해 더 깊이 다뤄보겠습니다.
+                        </p>
+                        
+                        <div class="post-tags" style="margin-top: var(--space-2xl);">
+                            <span class="post-tag">#Jetpack Compose</span>
+                            <span class="post-tag">#Clean Architecture</span>
+                            <span class="post-tag">#Hilt</span>
+                            <span class="post-tag">#Multi-module</span>
+                            <span class="post-tag">#Kotlin</span>
+                            <span class="post-tag">#Android</span>
+                        </div>
+                        
+                        <div class="post-navigation">
+                            <a href="/posts/android/kotlin-coroutines-flow-deep-dive/" class="post-nav-item">
+                                <span class="post-nav-label">Next Article →</span>
+                                <span class="post-nav-title">Kotlin Coroutines & Flow 심층 분석</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">© 2024 Chansaem Lee. Built with ❤️</p>
+                <div class="footer-links">
+                    <a href="/categories/" class="footer-link">Categories</a>
+                    <a href="/archives/" class="footer-link">Archives</a>
+                    <a href="https://github.com/inyion" class="footer-link" target="_blank">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+            const icon = mobileMenuBtn.querySelector('i');
+            icon.classList.toggle('fa-bars');
+            icon.classList.toggle('fa-times');
+        });
+    </script>
+</body>
+</html>
+

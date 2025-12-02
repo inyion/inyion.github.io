@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker & Kubernetes: 모바일 백엔드 인프라 구축 | ChanDev</title>
+    <meta name="description" content="컨테이너 기반 마이크로서비스 아키텍처 설계, CI/CD 파이프라인 구성, 무중단 배포 전략">
+    <meta name="author" content="Chansaem Lee">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/modern.css">
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ChanDev</span>
+                </a>
+                <nav>
+                    <ul class="nav-menu" id="navMenu">
+                        <li><a href="/" class="nav-link">Home</a></li>
+                        <li><a href="/categories/" class="nav-link">Categories</a></li>
+                        <li><a href="/archives/" class="nav-link">Archives</a></li>
+                        <li><a href="/#about" class="nav-link">About</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="post-page">
+        <article>
+            <div class="post-header">
+                <div class="container">
+                    <span class="post-category server">
+                        <i class="fa fa-server"></i> Backend
+                    </span>
+                    <h1 class="post-title">Docker & Kubernetes: 모바일 백엔드 인프라 구축</h1>
+                    <div class="post-meta">
+                        <span class="post-meta-item">
+                            <i class="fa fa-calendar"></i>
+                            2024년 10월 15일
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-clock"></i>
+                            16 min read
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-user"></i>
+                            Chansaem Lee
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                <div class="container container-narrow">
+                    <div class="post-body">
+                        <p>
+                            모바일 앱의 백엔드는 <strong>높은 가용성</strong>과 <strong>확장성</strong>이 필수입니다. 
+                            이 글에서는 Docker와 Kubernetes를 활용하여 안정적인 인프라를 구축하는 방법을 다룹니다.
+                        </p>
+                        
+                        <h2>Docker 기초</h2>
+                        
+                        <h3>Dockerfile 작성</h3>
+                        
+                        <pre><code class="language-dockerfile"># Multi-stage build
+FROM gradle:8.4-jdk17 AS builder
+WORKDIR /app
+COPY build.gradle.kts settings.gradle.kts ./
+COPY src ./src
+RUN gradle build -x test --no-daemon
+
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+
+# 보안: non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+COPY --from=builder /app/build/libs/*.jar app.jar
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s \
+  CMD wget -q --spider http://localhost:8080/actuator/health || exit 1
+
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]</code></pre>
+                        
+                        <h3>Docker Compose로 로컬 환경 구성</h3>
+                        
+                        <pre><code class="language-yaml"># docker-compose.yml
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - backend
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d myapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  backend:
+    driver: bridge</code></pre>
+                        
+                        <h2>Kubernetes 기본 개념</h2>
+                        
+                        <h3>Deployment</h3>
+                        
+                        <pre><code class="language-yaml"># k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+  labels:
+    app: api-server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-server
+  template:
+    metadata:
+      labels:
+        app: api-server
+    spec:
+      containers:
+      - name: api
+        image: myregistry/api-server:v1.0.0
+        ports:
+        - containerPort: 8080
+        
+        # 리소스 제한
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        
+        # 환경 변수
+        envFrom:
+        - configMapRef:
+            name: api-config
+        - secretRef:
+            name: api-secrets
+        
+        # Probes
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+      
+      # Pod Anti-Affinity: 같은 노드에 배치 방지
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: api-server
+              topologyKey: kubernetes.io/hostname</code></pre>
+                        
+                        <h3>Service & Ingress</h3>
+                        
+                        <pre><code class="language-yaml"># k8s/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-server
+spec:
+  selector:
+    app: api-server
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP
+
+---
+# k8s/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+spec:
+  tls:
+  - hosts:
+    - api.example.com
+    secretName: api-tls
+  rules:
+  - host: api.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api-server
+            port:
+              number: 80</code></pre>
+                        
+                        <h3>ConfigMap & Secret</h3>
+                        
+                        <pre><code class="language-yaml"># k8s/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+data:
+  SPRING_PROFILES_ACTIVE: "prod"
+  SERVER_PORT: "8080"
+  DB_HOST: "postgres-service"
+  REDIS_HOST: "redis-service"
+
+---
+# k8s/secret.yaml (Base64 인코딩)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-secrets
+type: Opaque
+data:
+  DB_PASSWORD: cGFzc3dvcmQxMjM=  # base64
+  JWT_SECRET: c3VwZXJzZWNyZXRrZXk=</code></pre>
+                        
+                        <h2>Horizontal Pod Autoscaler</h2>
+                        
+                        <pre><code class="language-yaml"># k8s/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-server-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-server
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60</code></pre>
+                        
+                        <h2>CI/CD with GitHub Actions</h2>
+                        
+                        <pre><code class="language-yaml"># .github/workflows/deploy.yml
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Run tests
+      run: ./gradlew test
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configure kubectl
+      uses: azure/setup-kubectl@v3
+    
+    - name: Set Kubernetes context
+      uses: azure/k8s-set-context@v3
+      with:
+        kubeconfig: ${{ secrets.KUBE_CONFIG }}
+    
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl set image deployment/api-server \
+          api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        kubectl rollout status deployment/api-server</code></pre>
+                        
+                        <h2>무중단 배포 전략</h2>
+                        
+                        <pre><code class="language-yaml"># Rolling Update (기본)
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0      # 항상 모든 Pod 유지
+      maxSurge: 1            # 한 번에 하나씩 추가
+
+---
+# Blue-Green Deployment
+# blue-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server-blue
+  labels:
+    app: api-server
+    version: blue
+spec:
+  replicas: 3
+  # ...
+
+# 서비스 전환
+kubectl patch service api-server -p \
+  '{"spec":{"selector":{"version":"green"}}}'</code></pre>
+                        
+                        <h2>모니터링 설정</h2>
+                        
+                        <pre><code class="language-yaml"># Prometheus ServiceMonitor
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: api-server
+spec:
+  selector:
+    matchLabels:
+      app: api-server
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s</code></pre>
+                        
+                        <h2>마무리</h2>
+                        
+                        <p>
+                            Docker와 Kubernetes는 현대 백엔드 인프라의 표준입니다. 
+                            이 글에서 다룬 내용을 기반으로 안정적이고 확장 가능한 모바일 백엔드를 구축할 수 있습니다.
+                        </p>
+                        
+                        <div class="post-tags" style="margin-top: var(--space-2xl);">
+                            <span class="post-tag">#Docker</span>
+                            <span class="post-tag">#Kubernetes</span>
+                            <span class="post-tag">#CI/CD</span>
+                            <span class="post-tag">#DevOps</span>
+                            <span class="post-tag">#Infrastructure</span>
+                        </div>
+                        
+                        <div class="post-navigation">
+                            <a href="/posts/server/spring-boot-kotlin-rest-api/" class="post-nav-item">
+                                <span class="post-nav-label">← Previous Article</span>
+                                <span class="post-nav-title">Spring Boot + Kotlin REST API</span>
+                            </a>
+                            <a href="/posts/web/react-typescript-best-practices/" class="post-nav-item">
+                                <span class="post-nav-label">Next Article →</span>
+                                <span class="post-nav-title">React + TypeScript 베스트 프랙티스</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">© 2024 Chansaem Lee. Built with ❤️</p>
+                <div class="footer-links">
+                    <a href="/categories/" class="footer-link">Categories</a>
+                    <a href="/archives/" class="footer-link">Archives</a>
+                    <a href="https://github.com/inyion" class="footer-link" target="_blank">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
+

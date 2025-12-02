@@ -1,391 +1,270 @@
-
 <!DOCTYPE html>
 <html lang="ko">
-    
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="Samsia Blog">
-    <title>All categories - Samsia Blog</title>
-    <meta name="author" content="Sam">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories | ChanDev</title>
+    <meta name="description" content="Android, iOS, Backend, Frontend 기술 블로그 카테고리">
+    <meta name="author" content="Chansaem Lee">
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/modern.css">
     
-    
-    <meta name="description" content="Sam and Sia Blog using Hexo">
-<meta property="og:type" content="blog">
-<meta property="og:title" content="All categories">
-<meta property="og:url" content="http://inyion.github.io/categories/index.html">
-<meta property="og:site_name" content="Samsia Blog">
-<meta property="og:description" content="Sam and Sia Blog using Hexo">
-<meta property="og:updated_time" content="2017-12-20T06:02:03.381Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="All categories">
-<meta name="twitter:description" content="Sam and Sia Blog using Hexo">
-    
-    
+    <style>
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-xl);
+            margin-top: var(--space-2xl);
+        }
         
-    
-    
-        <meta property="og:image" content="http://inyion.github.io/assets/images/profile.jpg"/>
-    
-    
-    
-    
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-pz4cc6y13wt2trzqa8l3n9v0yykr0sstdaheem7qj628nhjmhp9pfawvqawz.min.css">
-    <!--STYLES END-->
-    
-
-    
+        .category-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            transition: all var(--transition-normal);
+        }
+        
+        .category-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .category-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .category-icon.android {
+            background: rgba(61, 220, 132, 0.1);
+            color: var(--accent-android);
+        }
+        
+        .category-icon.ios {
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--accent-ios);
+        }
+        
+        .category-icon.server {
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--accent-server);
+        }
+        
+        .category-icon.web {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--accent-web);
+        }
+        
+        .category-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .category-count {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: var(--space-lg);
+        }
+        
+        .category-posts {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .category-posts li {
+            padding: var(--space-sm) 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .category-posts li:last-child {
+            border-bottom: none;
+        }
+        
+        .category-posts a {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: block;
+            transition: color var(--transition-fast);
+        }
+        
+        .category-posts a:hover {
+            color: var(--accent-primary);
+        }
+        
+        .view-all {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-top: var(--space-md);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+    </style>
 </head>
-
-    <body>
-        <div id="blog">
-            <!-- Define author's picture -->
-
-
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
     
-        
-            
-        
-    
-
-<header id="header" data-behavior="1">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
-    <div class="header-title">
-        <a class="header-title-link" href="/ ">Samsia Blog</a>
-    </div>
-    
-        
-            <a  class="header-right-picture "
-                href="#about">
-        
-        
-            <img class="header-picture" src="/assets/images/profile.jpg" alt="Author&#39;s picture"/>
-        
-        </a>
-    
-</header>
-
-            <!-- Define author's picture -->
-
-
-
-        
-    
-
-<nav id="sidebar" data-behavior="1">
-    <div class="sidebar-container">
-        
-            <div class="sidebar-profile">
-                <a href="/#about">
-                    <img class="sidebar-profile-picture" src="/assets/images/profile.jpg" alt="Author&#39;s picture"/>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ChanDev</span>
                 </a>
-                <h4 class="sidebar-profile-name">Sam</h4>
-                
-                    <h5 class="sidebar-profile-bio"><p>author.bio</p>
-</h5>
-                
+                <nav>
+                    <ul class="nav-menu" id="navMenu">
+                        <li><a href="/" class="nav-link">Home</a></li>
+                        <li><a href="/categories/" class="nav-link active">Categories</a></li>
+                        <li><a href="/archives/" class="nav-link">Archives</a></li>
+                        <li><a href="/#about" class="nav-link">About</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <i class="fa fa-bars"></i>
+                </button>
             </div>
-        
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/ "
-                            
-                            title="Home"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-home" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Home</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/all-categories"
-                            
-                            title="Categories"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Categories</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/all-tags"
-                            
-                            title="Tags"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Tags</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/all-archives"
-                            
-                            title="Archives"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Archives</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link open-algolia-search"
-                             href="#search"
-                            
-                            title="Search"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-search" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Search</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="#about"
-                            
-                            title="About"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-question" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">About</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/atom.xml"
-                            
-                            title="RSS"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-    </div>
-</nav>
-
-            
-            <div id="main" data-behavior="1"
-                 class="
-                        hasCoverMetaIn
-                        ">
-                
-<article class="post" itemscope itemType="http://schema.org/BlogPosting">
-    
-    
-        <div class="post-header main-content-wrap text-left">
-    
-        <h1 class="post-title" itemprop="headline">
-            All categories
-        </h1>
-    
-    
-        <div class="post-meta">
-    <time itemprop="datePublished" datetime="2017-12-20T14:48:13+09:00">
-	
-		    12월 20, 2017
-    	
-    </time>
-    
-</div>
-
-    
-</div>
-    
-    <div class="post-content markdown" itemprop="articleBody">
-        <div class="main-content-wrap">
-            
-            
-
         </div>
-    </div>
-    <div id="post-footer" class="post-footer main-content-wrap">
-        
-        
-            <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    <a class="post-action-btn btn btn--disabled">
-                
-                    <i class="fa fa-angle-left" aria-hidden="true"></i>
-                    <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
-                </a>
-            </li>
-            <li class="post-action">
-                
-                    <a class="post-action-btn btn btn--disabled">
-                
-                    <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
-                    <i class="fa fa-angle-right" aria-hidden="true"></i>
-                </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a class="post-action-btn btn btn--default btn-open-shareoptions" href="#btn-open-shareoptions" aria-label="Share this post">
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
-        </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://inyion.github.io/categories/index.html" title="Share on Facebook">
-                    <i class="fa fa-facebook-official" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http://inyion.github.io/categories/index.html" title="Share on Twitter">
-                    <i class="fa fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http://inyion.github.io/categories/index.html" title="Share on Google+">
-                    <i class="fa fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-                <li class="post-action">
-                    <a class="post-action-btn btn btn--default" href="#disqus_thread">
-                        <i class="fa fa-comment-o"></i>
-                    </a>
-                </li>
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
-        </li>
-    </ul>
-</div>
-
-
-        
-        
-            
-                <div id="disqus_thread">
-    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
-            
-        
-    </div>
-</article>
-
-
-
-                <footer id="footer" class="main-content-wrap">
-    <span class="copyrights">
-        Copyrights &copy; 2018 Sam. All Rights Reserved.
-    </span>
-</footer>
-
+    </header>
+    
+    <main class="category-page">
+        <div class="category-header">
+            <div class="container">
+                <h1 class="section-title">Categories</h1>
+                <p class="section-description">
+                    기술 분야별로 정리된 포스트들을 확인해보세요.
+                </p>
             </div>
-            
         </div>
         
-
-
-    
-        
-    
-
-<div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-remove"></i>
-        </div>
-        
-            <img id="about-card-picture" src="/assets/images/profile.jpg" alt="Author&#39;s picture"/>
-        
-            <h4 id="about-card-name">Sam</h4>
-        
-            <div id="about-card-bio"><p>author.bio</p>
-</div>
-        
-        
-            <div id="about-card-job">
-                <i class="fa fa-briefcase"></i>
-                <br/>
-                <p>author.job</p>
-
+        <section class="section">
+            <div class="container">
+                <div class="categories-grid">
+                    <!-- Android -->
+                    <div class="category-card">
+                        <div class="category-icon android">
+                            <i class="fa-brands fa-android"></i>
+                        </div>
+                        <h2 class="category-name">Android</h2>
+                        <p class="category-count">3 posts</p>
+                        <ul class="category-posts">
+                            <li>
+                                <a href="/posts/android/jetpack-compose-clean-architecture/">
+                                    Jetpack Compose + Clean Architecture
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/posts/android/kotlin-coroutines-flow-deep-dive/">
+                                    Kotlin Coroutines & Flow 심층 분석
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/posts/android/android-performance-optimization/">
+                                    Android 성능 최적화
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- iOS -->
+                    <div class="category-card">
+                        <div class="category-icon ios">
+                            <i class="fa-brands fa-apple"></i>
+                        </div>
+                        <h2 class="category-name">iOS</h2>
+                        <p class="category-count">2 posts</p>
+                        <ul class="category-posts">
+                            <li>
+                                <a href="/posts/ios/swiftui-mvvm-combine/">
+                                    SwiftUI + MVVM + Combine
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/posts/ios/swift-concurrency-async-await/">
+                                    Swift Concurrency: async/await
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Backend -->
+                    <div class="category-card">
+                        <div class="category-icon server">
+                            <i class="fa fa-server"></i>
+                        </div>
+                        <h2 class="category-name">Backend</h2>
+                        <p class="category-count">2 posts</p>
+                        <ul class="category-posts">
+                            <li>
+                                <a href="/posts/server/spring-boot-kotlin-rest-api/">
+                                    Spring Boot + Kotlin REST API
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/posts/server/docker-kubernetes-mobile-backend/">
+                                    Docker & Kubernetes 인프라 구축
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Frontend -->
+                    <div class="category-card">
+                        <div class="category-icon web">
+                            <i class="fa-brands fa-react"></i>
+                        </div>
+                        <h2 class="category-name">Frontend</h2>
+                        <p class="category-count">2 posts</p>
+                        <ul class="category-posts">
+                            <li>
+                                <a href="/posts/web/react-typescript-best-practices/">
+                                    React + TypeScript 베스트 프랙티스
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/posts/web/nextjs-app-router-full-stack/">
+                                    Next.js 14 App Router 풀스택
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-        
-        
-    </div>
-</div>
-
-        
-        
-<div id="cover" style="background-image:url('/assets/images/cover3.jpg');"></div>
-        <!--SCRIPTS-->
-<script src="/assets/js/script-peofhqjkzcghmndknakluequy1y6owxdwpaqyju9ntl9zxnk7rdolb3rjjoj.min.js"></script>
-<!--SCRIPTS END-->
-
+        </section>
+    </main>
     
-        <script>
-             var disqus_config = function () {
-                 this.page.url = 'http://inyion.github.io/categories/index.html';
-                 
-                    this.page.identifier = 'categories/index.html';
-                 
-             };
-            (function() {
-                var d = document, s = d.createElement('script');
-                var disqus_shortname = 'inyion';
-                s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-
-                s.setAttribute('data-timestamp', +new Date());
-                (d.head || d.body).appendChild(s);
-            })();
-        </script>
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">© 2024 Chansaem Lee. Built with ❤️</p>
+                <div class="footer-links">
+                    <a href="/categories/" class="footer-link">Categories</a>
+                    <a href="/archives/" class="footer-link">Archives</a>
+                    <a href="https://github.com/inyion" class="footer-link" target="_blank">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
     
-
-
-
-    </body>
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+    </script>
+</body>
 </html>

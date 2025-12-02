@@ -1,362 +1,194 @@
-
 <!DOCTYPE html>
 <html lang="ko">
-    
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="Samsia Blog">
-    <title>Archives - Samsia Blog</title>
-    <meta name="author" content="Sam">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archives | ChanDev</title>
+    <meta name="description" content="모든 블로그 포스트 아카이브">
+    <meta name="author" content="Chansaem Lee">
     
-    
-    
-    <meta name="description" content="Sam and Sia Blog using Hexo">
-<meta property="og:type" content="blog">
-<meta property="og:title" content="Samsia Blog">
-<meta property="og:url" content="http://inyion.github.io/archives/index.html">
-<meta property="og:site_name" content="Samsia Blog">
-<meta property="og:description" content="Sam and Sia Blog using Hexo">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Samsia Blog">
-<meta name="twitter:description" content="Sam and Sia Blog using Hexo">
-    
-    
-        
-    
-    
-        <meta property="og:image" content="http://inyion.github.io/assets/images/profile.jpg"/>
-    
-    
-    
-    
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-pz4cc6y13wt2trzqa8l3n9v0yykr0sstdaheem7qj628nhjmhp9pfawvqawz.min.css">
-    <!--STYLES END-->
-    
-
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/modern.css">
 </head>
-
-    <body>
-        <div id="blog">
-            <!-- Define author's picture -->
-
-
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
     
-        
-            
-        
-    
-
-<header id="header" data-behavior="1">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
-    <div class="header-title">
-        <a class="header-title-link" href="/ ">Samsia Blog</a>
-    </div>
-    
-        
-            <a  class="header-right-picture "
-                href="#about">
-        
-        
-            <img class="header-picture" src="/assets/images/profile.jpg" alt="Author&#39;s picture"/>
-        
-        </a>
-    
-</header>
-
-            <!-- Define author's picture -->
-
-
-
-        
-    
-
-<nav id="sidebar" data-behavior="1">
-    <div class="sidebar-container">
-        
-            <div class="sidebar-profile">
-                <a href="/#about">
-                    <img class="sidebar-profile-picture" src="/assets/images/profile.jpg" alt="Author&#39;s picture"/>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ChanDev</span>
                 </a>
-                <h4 class="sidebar-profile-name">Sam</h4>
-                
-                    <h5 class="sidebar-profile-bio"><p>author.bio</p>
-</h5>
-                
+                <nav>
+                    <ul class="nav-menu" id="navMenu">
+                        <li><a href="/" class="nav-link">Home</a></li>
+                        <li><a href="/categories/" class="nav-link">Categories</a></li>
+                        <li><a href="/archives/" class="nav-link active">Archives</a></li>
+                        <li><a href="/#about" class="nav-link">About</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <i class="fa fa-bars"></i>
+                </button>
             </div>
-        
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/ "
-                            
-                            title="Home"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-home" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Home</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/all-categories"
-                            
-                            title="Categories"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Categories</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/all-tags"
-                            
-                            title="Tags"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Tags</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/all-archives"
-                            
-                            title="Archives"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Archives</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link open-algolia-search"
-                             href="#search"
-                            
-                            title="Search"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-search" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Search</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="#about"
-                            
-                            title="About"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-question" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">About</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/atom.xml"
-                            
-                            title="RSS"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-    </div>
-</nav>
-
-            
-            <div id="main" data-behavior="1"
-                 class="
-                        hasCoverMetaIn
-                        ">
-                
-    <section class="postShorten-group main-content-wrap">
+        </div>
+    </header>
     
-    
-    <article class="postShorten postShorten--thumbnailimg-bottom" itemscope itemType="http://schema.org/BlogPosting">
-        <div class="postShorten-wrap">
-            
-            <div class="postShorten-header">
-                <h1 class="postShorten-title" itemprop="headline">
-                    
-                        <a class="link-unstyled" href="/2017/05/22/post/">
-                            first post
-                        </a>
-                    
-                </h1>
-                <div class="postShorten-meta">
-    <time itemprop="datePublished" datetime="2017-05-22T00:19:11+09:00">
-	
-		    5월 22, 2017
-    	
-    </time>
-    
-</div>
-
+    <main class="category-page">
+        <div class="category-header">
+            <div class="container">
+                <h1 class="section-title">Archives</h1>
+                <p class="section-description">
+                    모든 기술 포스트를 시간순으로 확인하세요. 총 9개의 포스트가 있습니다.
+                </p>
             </div>
-            
-                <div class="postShorten-content" itemprop="articleBody">
-                    <p>ㅎㅎ 첫 작성이군요<br>앞으로 얼마나 이 블로그가 변화할지<br>두근두근 하군요.</p>
-
-                    
+        </div>
+        
+        <section class="section">
+            <div class="container">
+                <div class="archive-list">
+                    <!-- 2024 -->
+                    <div class="archive-year">
+                        <h2 class="archive-year-title">2024</h2>
                         
-
-                    
-                    
-                        <p>
-                            <a href="/2017/05/22/post/#post-footer" class="postShorten-excerpt_link link">
-                                Comment and share
-                            </a>
-                        </p>
-                    
-                </div>
-            
-        </div>
-        
-    </article>
-    
-    
-    <article class="postShorten postShorten--thumbnailimg-bottom" itemscope itemType="http://schema.org/BlogPosting">
-        <div class="postShorten-wrap">
-            
-            <div class="postShorten-header">
-                <h1 class="postShorten-title" itemprop="headline">
-                    
-                        <a class="link-unstyled" href="/2017/05/21/hello-world/">
-                            Hello World
-                        </a>
-                    
-                </h1>
-                <div class="postShorten-meta">
-    <time itemprop="datePublished" datetime="2017-05-21T21:47:15+09:00">
-	
-		    5월 21, 2017
-    	
-    </time>
-    
-</div>
-
-            </div>
-            
-                <div class="postShorten-content" itemprop="articleBody">
-                    <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
-
-                    
+                        <div class="archive-item">
+                            <span class="archive-date">Dec 01</span>
+                            <div class="archive-title">
+                                <a href="/posts/android/jetpack-compose-clean-architecture/">
+                                    <span class="post-category android" style="font-size: 0.75rem; margin-right: 8px;">
+                                        <i class="fa-brands fa-android"></i>
+                                    </span>
+                                    Jetpack Compose + Clean Architecture: 대규모 앱을 위한 아키텍처 설계
+                                </a>
+                            </div>
+                        </div>
                         
-
-                    
-                    
-                        <p>
-                            <a href="/2017/05/21/hello-world/#post-footer" class="postShorten-excerpt_link link">
-                                Comment and share
-                            </a>
-                        </p>
-                    
+                        <div class="archive-item">
+                            <span class="archive-date">Nov 25</span>
+                            <div class="archive-title">
+                                <a href="/posts/android/kotlin-coroutines-flow-deep-dive/">
+                                    <span class="post-category android" style="font-size: 0.75rem; margin-right: 8px;">
+                                        <i class="fa-brands fa-android"></i>
+                                    </span>
+                                    Kotlin Coroutines & Flow 심층 분석: 실전 비동기 처리 패턴
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="archive-item">
+                            <span class="archive-date">Nov 18</span>
+                            <div class="archive-title">
+                                <a href="/posts/android/android-performance-optimization/">
+                                    <span class="post-category android" style="font-size: 0.75rem; margin-right: 8px;">
+                                        <i class="fa-brands fa-android"></i>
+                                    </span>
+                                    Android 성능 최적화: 메모리 누수부터 UI 렌더링까지
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="archive-item">
+                            <span class="archive-date">Nov 10</span>
+                            <div class="archive-title">
+                                <a href="/posts/ios/swiftui-mvvm-combine/">
+                                    <span class="post-category ios" style="font-size: 0.75rem; margin-right: 8px;">
+                                        <i class="fa-brands fa-apple"></i>
+                                    </span>
+                                    SwiftUI + MVVM + Combine: iOS 앱 아키텍처 완전 정복
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="archive-item">
+                            <span class="archive-date">Nov 05</span>
+                            <div class="archive-title">
+                                <a href="/posts/ios/swift-concurrency-async-await/">
+                                    <span class="post-category ios" style="font-size: 0.75rem; margin-right: 8px;">
+                                        <i class="fa-brands fa-apple"></i>
+                                    </span>
+                                    Swift Concurrency: async/await와 Actor로 안전한 동시성 구현하기
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="archive-item">
+                            <span class="archive-date">Oct 28</span>
+                            <div class="archive-title">
+                                <a href="/posts/server/spring-boot-kotlin-rest-api/">
+                                    <span class="post-category server" style="font-size: 0.75rem; margin-right: 8px;">
+                                        <i class="fa fa-server"></i>
+                                    </span>
+                                    Spring Boot + Kotlin으로 RESTful API 구축하기
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="archive-item">
+                            <span class="archive-date">Oct 15</span>
+                            <div class="archive-title">
+                                <a href="/posts/server/docker-kubernetes-mobile-backend/">
+                                    <span class="post-category server" style="font-size: 0.75rem; margin-right: 8px;">
+                                        <i class="fa fa-server"></i>
+                                    </span>
+                                    Docker & Kubernetes: 모바일 백엔드 인프라 구축
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="archive-item">
+                            <span class="archive-date">Oct 05</span>
+                            <div class="archive-title">
+                                <a href="/posts/web/react-typescript-best-practices/">
+                                    <span class="post-category web" style="font-size: 0.75rem; margin-right: 8px;">
+                                        <i class="fa-brands fa-react"></i>
+                                    </span>
+                                    React + TypeScript 베스트 프랙티스 2024
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="archive-item">
+                            <span class="archive-date">Sep 20</span>
+                            <div class="archive-title">
+                                <a href="/posts/web/nextjs-app-router-full-stack/">
+                                    <span class="post-category web" style="font-size: 0.75rem; margin-right: 8px;">
+                                        <i class="fa-brands fa-react"></i>
+                                    </span>
+                                    Next.js 14 App Router로 풀스택 웹 애플리케이션 만들기
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            
-        </div>
-        
-    </article>
-    
-    <div class="pagination-bar">
-    <ul class="pagination">
-        
-        
-        <li class="pagination-number">page 1 of 1</li>
-    </ul>
-</div>
-
-</section>
-
-
-
-                <footer id="footer" class="main-content-wrap">
-    <span class="copyrights">
-        Copyrights &copy; 2018 Sam. All Rights Reserved.
-    </span>
-</footer>
-
             </div>
-            
-        </div>
-        
-
-
+        </section>
+    </main>
     
-        
-    
-
-<div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-remove"></i>
-        </div>
-        
-            <img id="about-card-picture" src="/assets/images/profile.jpg" alt="Author&#39;s picture"/>
-        
-            <h4 id="about-card-name">Sam</h4>
-        
-            <div id="about-card-bio"><p>author.bio</p>
-</div>
-        
-        
-            <div id="about-card-job">
-                <i class="fa fa-briefcase"></i>
-                <br/>
-                <p>author.job</p>
-
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">© 2024 Chansaem Lee. Built with ❤️</p>
+                <div class="footer-links">
+                    <a href="/categories/" class="footer-link">Categories</a>
+                    <a href="/archives/" class="footer-link">Archives</a>
+                    <a href="https://github.com/inyion" class="footer-link" target="_blank">GitHub</a>
+                </div>
             </div>
-        
-        
-    </div>
-</div>
-
-        
-        
-<div id="cover" style="background-image:url('/assets/images/cover3.jpg');"></div>
-        <!--SCRIPTS-->
-<script src="/assets/js/script-peofhqjkzcghmndknakluequy1y6owxdwpaqyju9ntl9zxnk7rdolb3rjjoj.min.js"></script>
-<!--SCRIPTS END-->
-
-
-
-    </body>
+        </div>
+    </footer>
+    
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+    </script>
+</body>
 </html>

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kotlin Coroutines & Flow 심층 분석: 실전 비동기 처리 패턴 | ChanDev</title>
+    <meta name="description" content="Coroutines의 내부 동작 원리부터 Flow를 활용한 반응형 스트림 처리, 에러 핸들링 전략까지">
+    <meta name="author" content="Chansaem Lee">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/modern.css">
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ChanDev</span>
+                </a>
+                <nav>
+                    <ul class="nav-menu" id="navMenu">
+                        <li><a href="/" class="nav-link">Home</a></li>
+                        <li><a href="/categories/" class="nav-link">Categories</a></li>
+                        <li><a href="/archives/" class="nav-link">Archives</a></li>
+                        <li><a href="/#about" class="nav-link">About</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="post-page">
+        <article>
+            <div class="post-header">
+                <div class="container">
+                    <span class="post-category android">
+                        <i class="fa-brands fa-android"></i> Android
+                    </span>
+                    <h1 class="post-title">Kotlin Coroutines & Flow 심층 분석: 실전 비동기 처리 패턴</h1>
+                    <div class="post-meta">
+                        <span class="post-meta-item">
+                            <i class="fa fa-calendar"></i>
+                            2024년 11월 25일
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-clock"></i>
+                            12 min read
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-user"></i>
+                            Chansaem Lee
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                <div class="container container-narrow">
+                    <div class="post-body">
+                        <p>
+                            Kotlin Coroutines는 Android 비동기 프로그래밍의 표준이 되었습니다. 
+                            이 글에서는 Coroutines의 <strong>내부 동작 원리</strong>부터 
+                            <strong>Flow를 활용한 반응형 프로그래밍</strong>까지 깊이 있게 다룹니다.
+                        </p>
+                        
+                        <h2>Coroutines 내부 동작 원리</h2>
+                        
+                        <p>
+                            Coroutines는 <strong>Continuation Passing Style(CPS)</strong> 변환을 통해 
+                            비동기 코드를 동기적으로 작성할 수 있게 해줍니다. 
+                            컴파일러가 suspend 함수를 상태 머신으로 변환합니다.
+                        </p>
+                        
+                        <pre><code class="language-kotlin">// 우리가 작성하는 코드
+suspend fun fetchUserData(): User {
+    val user = fetchUser()       // 중단점 1
+    val profile = fetchProfile() // 중단점 2
+    return user.copy(profile = profile)
+}
+
+// 컴파일러가 변환한 코드 (개념적)
+fun fetchUserData(continuation: Continuation&lt;User&gt;): Any {
+    val sm = continuation as? FetchUserDataSM 
+        ?: FetchUserDataSM(continuation)
+    
+    when (sm.label) {
+        0 -> {
+            sm.label = 1
+            val result = fetchUser(sm)
+            if (result == COROUTINE_SUSPENDED) return result
+            sm.user = result as User
+        }
+        1 -> {
+            sm.user = sm.result as User
+            sm.label = 2
+            val result = fetchProfile(sm)
+            if (result == COROUTINE_SUSPENDED) return result
+            sm.profile = result as Profile
+        }
+        2 -> {
+            sm.profile = sm.result as Profile
+            return sm.user.copy(profile = sm.profile)
+        }
+    }
+}</code></pre>
+                        
+                        <h2>Dispatcher 이해하기</h2>
+                        
+                        <p>Dispatcher는 코루틴이 실행될 스레드를 결정합니다.</p>
+                        
+                        <pre><code class="language-kotlin">// Main: UI 작업
+viewModelScope.launch(Dispatchers.Main) {
+    _uiState.value = LoadingState
+}
+
+// IO: 네트워크, 파일 I/O
+withContext(Dispatchers.IO) {
+    val data = api.fetchData()
+    database.save(data)
+}
+
+// Default: CPU 집약적 작업
+withContext(Dispatchers.Default) {
+    val processed = heavyComputation(data)
+}
+
+// Unconfined: 첫 중단점까지 현재 스레드에서 실행
+// ⚠️ 일반적으로 사용을 권장하지 않음</code></pre>
+                        
+                        <h2>Structured Concurrency</h2>
+                        
+                        <p>
+                            구조적 동시성은 코루틴의 핵심 개념입니다. 
+                            부모 코루틴이 취소되면 자식 코루틴도 함께 취소됩니다.
+                        </p>
+                        
+                        <pre><code class="language-kotlin">class UserViewModel : ViewModel() {
+    
+    fun loadUserData() {
+        // viewModelScope가 취소되면 모든 자식 코루틴이 취소됨
+        viewModelScope.launch {
+            val user = async { fetchUser() }
+            val posts = async { fetchPosts() }
+            val friends = async { fetchFriends() }
+            
+            // 모든 작업이 완료될 때까지 대기
+            _uiState.value = UserData(
+                user = user.await(),
+                posts = posts.await(),
+                friends = friends.await()
+            )
+        }
+    }
+}
+
+// supervisorScope: 자식의 실패가 다른 자식에게 영향 X
+suspend fun loadMultipleData() = supervisorScope {
+    val user = async { fetchUser() }
+    val posts = async { fetchPosts() }  // 이게 실패해도
+    val friends = async { fetchFriends() }  // 이건 계속 실행
+    
+    try {
+        UserData(user.await(), posts.await(), friends.await())
+    } catch (e: Exception) {
+        UserData(user.await(), emptyList(), friends.await())
+    }
+}</code></pre>
+                        
+                        <h2>Flow 기본 개념</h2>
+                        
+                        <p>
+                            Flow는 <strong>cold stream</strong>입니다. 
+                            collect가 호출되기 전까지 아무것도 실행되지 않습니다.
+                        </p>
+                        
+                        <pre><code class="language-kotlin">// Flow 생성
+fun fetchUsers(): Flow&lt;User&gt; = flow {
+    val users = api.getUsers()
+    users.forEach { user ->
+        emit(user)  // 값을 방출
+        delay(100)  // 0.1초 간격
+    }
+}
+
+// Flow 수집
+viewModelScope.launch {
+    fetchUsers()
+        .map { it.copy(name = it.name.uppercase()) }
+        .filter { it.isActive }
+        .catch { e -> emit(User.EMPTY) }
+        .collect { user ->
+            _users.value += user
+        }
+}</code></pre>
+                        
+                        <h2>StateFlow vs SharedFlow</h2>
+                        
+                        <pre><code class="language-kotlin">// StateFlow: 상태 홀더, 항상 최신 값 보유
+private val _uiState = MutableStateFlow(UiState())
+val uiState: StateFlow&lt;UiState&gt; = _uiState.asStateFlow()
+
+// SharedFlow: 이벤트 스트림, 값을 보유하지 않음
+private val _events = MutableSharedFlow&lt;Event&gt;()
+val events: SharedFlow&lt;Event&gt; = _events.asSharedFlow()
+
+// StateFlow 사용 예
+fun updateState(newValue: String) {
+    _uiState.update { current ->
+        current.copy(value = newValue)
+    }
+}
+
+// SharedFlow 사용 예 (one-time events)
+suspend fun sendEvent(event: Event) {
+    _events.emit(event)
+}</code></pre>
+                        
+                        <h2>Flow 연산자 활용</h2>
+                        
+                        <pre><code class="language-kotlin">// 검색 기능 구현 (debounce + distinctUntilChanged)
+searchQueryFlow
+    .debounce(300)  // 300ms 동안 새 입력 없으면
+    .distinctUntilChanged()  // 이전 값과 다를 때만
+    .filter { it.length >= 2 }  // 2글자 이상
+    .flatMapLatest { query ->  // 새 쿼리가 오면 이전 작업 취소
+        searchRepository.search(query)
+    }
+    .catch { e ->
+        emit(SearchResult.Error(e.message))
+    }
+    .collect { result ->
+        _searchResults.value = result
+    }
+
+// 여러 Flow 결합
+val combinedFlow = combine(
+    userFlow,
+    settingsFlow,
+    notificationsFlow
+) { user, settings, notifications ->
+    UiState(user, settings, notifications)
+}
+
+// zip: 각 Flow에서 하나씩 쌍으로 결합
+val zippedFlow = userFlow.zip(profileFlow) { user, profile ->
+    UserWithProfile(user, profile)
+}</code></pre>
+                        
+                        <h2>에러 핸들링 전략</h2>
+                        
+                        <pre><code class="language-kotlin">// 1. catch 연산자
+flow { emit(api.getData()) }
+    .catch { e ->
+        when (e) {
+            is IOException -> emit(cachedData)
+            else -> throw e  // 재throw
+        }
+    }
+    .collect { }
+
+// 2. retry 연산자
+flow { emit(api.getData()) }
+    .retry(3) { e ->
+        (e is IOException).also {
+            if (it) delay(1000)  // 1초 후 재시도
+        }
+    }
+    .catch { emit(fallbackData) }
+    .collect { }
+
+// 3. Result 래퍼
+suspend fun safeApiCall&lt;T&gt;(call: suspend () -> T): Result&lt;T&gt; {
+    return try {
+        Result.success(call())
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+}
+
+// 4. sealed class로 상태 표현
+sealed class Resource&lt;out T&gt; {
+    object Loading : Resource&lt;Nothing&gt;()
+    data class Success&lt;T&gt;(val data: T) : Resource&lt;T&gt;()
+    data class Error(val exception: Throwable) : Resource&lt;Nothing&gt;()
+}
+
+fun &lt;T&gt; Flow&lt;T&gt;.asResource(): Flow&lt;Resource&lt;T&gt;&gt; = flow {
+    emit(Resource.Loading)
+    try {
+        collect { value ->
+            emit(Resource.Success(value))
+        }
+    } catch (e: Exception) {
+        emit(Resource.Error(e))
+    }
+}</code></pre>
+                        
+                        <h2>Compose에서 Flow 수집</h2>
+                        
+                        <pre><code class="language-kotlin">@Composable
+fun UserScreen(viewModel: UserViewModel = hiltViewModel()) {
+    // Lifecycle-aware 수집
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    // Side effect 수집
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is Event.ShowSnackbar -> { /* ... */ }
+                is Event.Navigate -> { /* ... */ }
+            }
+        }
+    }
+    
+    UserContent(uiState)
+}
+
+// produceState 활용
+@Composable
+fun UserProfile(userId: String) {
+    val userState by produceState&lt;User?&gt;(null, userId) {
+        value = userRepository.getUser(userId)
+    }
+    
+    userState?.let { user ->
+        Text(user.name)
+    }
+}</code></pre>
+                        
+                        <h2>테스트</h2>
+                        
+                        <pre><code class="language-kotlin">@Test
+fun `flow emits correct values`() = runTest {
+    // Given
+    val flow = flowOf(1, 2, 3)
+    
+    // When & Then
+    flow.test {
+        assertEquals(1, awaitItem())
+        assertEquals(2, awaitItem())
+        assertEquals(3, awaitItem())
+        awaitComplete()
+    }
+}
+
+@Test
+fun `viewModel updates state on success`() = runTest {
+    // Given
+    coEvery { repository.getData() } returns flowOf(testData)
+    val viewModel = TestViewModel(repository)
+    
+    // Then
+    viewModel.uiState.test {
+        assertEquals(UiState.Loading, awaitItem())
+        assertEquals(UiState.Success(testData), awaitItem())
+    }
+}</code></pre>
+                        
+                        <h2>마무리</h2>
+                        
+                        <p>
+                            Kotlin Coroutines와 Flow는 Android 비동기 프로그래밍의 필수 도구입니다. 
+                            구조적 동시성, 적절한 Dispatcher 선택, 에러 핸들링 전략을 잘 활용하면 
+                            안정적이고 효율적인 앱을 만들 수 있습니다.
+                        </p>
+                        
+                        <div class="post-tags" style="margin-top: var(--space-2xl);">
+                            <span class="post-tag">#Coroutines</span>
+                            <span class="post-tag">#Flow</span>
+                            <span class="post-tag">#StateFlow</span>
+                            <span class="post-tag">#Kotlin</span>
+                            <span class="post-tag">#Android</span>
+                        </div>
+                        
+                        <div class="post-navigation">
+                            <a href="/posts/android/jetpack-compose-clean-architecture/" class="post-nav-item">
+                                <span class="post-nav-label">← Previous Article</span>
+                                <span class="post-nav-title">Jetpack Compose + Clean Architecture</span>
+                            </a>
+                            <a href="/posts/android/android-performance-optimization/" class="post-nav-item">
+                                <span class="post-nav-label">Next Article →</span>
+                                <span class="post-nav-title">Android 성능 최적화</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">© 2024 Chansaem Lee. Built with ❤️</p>
+                <div class="footer-links">
+                    <a href="/categories/" class="footer-link">Categories</a>
+                    <a href="/archives/" class="footer-link">Archives</a>
+                    <a href="https://github.com/inyion" class="footer-link" target="_blank">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
+

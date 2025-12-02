@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Boot + Kotlin으로 RESTful API 구축하기 | ChanDev</title>
+    <meta name="description" content="Kotlin의 장점을 살린 Spring Boot 프로젝트 설정부터 JWT 인증, JPA, 테스트 코드 작성까지">
+    <meta name="author" content="Chansaem Lee">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/modern.css">
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ChanDev</span>
+                </a>
+                <nav>
+                    <ul class="nav-menu" id="navMenu">
+                        <li><a href="/" class="nav-link">Home</a></li>
+                        <li><a href="/categories/" class="nav-link">Categories</a></li>
+                        <li><a href="/archives/" class="nav-link">Archives</a></li>
+                        <li><a href="/#about" class="nav-link">About</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="post-page">
+        <article>
+            <div class="post-header">
+                <div class="container">
+                    <span class="post-category server">
+                        <i class="fa fa-server"></i> Backend
+                    </span>
+                    <h1 class="post-title">Spring Boot + Kotlin으로 RESTful API 구축하기</h1>
+                    <div class="post-meta">
+                        <span class="post-meta-item">
+                            <i class="fa fa-calendar"></i>
+                            2024년 10월 28일
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-clock"></i>
+                            18 min read
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-user"></i>
+                            Chansaem Lee
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                <div class="container container-narrow">
+                    <div class="post-body">
+                        <p>
+                            모바일 개발자로서 백엔드를 직접 구축해야 할 때가 있습니다. 
+                            이 글에서는 Kotlin의 장점을 살려 <strong>Spring Boot</strong>로 
+                            프로덕션 레벨의 REST API를 구축하는 방법을 다룹니다.
+                        </p>
+                        
+                        <h2>프로젝트 설정</h2>
+                        
+                        <pre><code class="language-kotlin">// build.gradle.kts
+plugins {
+    id("org.springframework.boot") version "3.2.0"
+    id("io.spring.dependency-management") version "1.1.4"
+    kotlin("jvm") version "1.9.20"
+    kotlin("plugin.spring") version "1.9.20"
+    kotlin("plugin.jpa") version "1.9.20"
+}
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    
+    // JWT
+    implementation("io.jsonwebtoken:jjwt-api:0.12.3")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
+    
+    runtimeOnly("org.postgresql:postgresql")
+    
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
+}</code></pre>
+                        
+                        <h2>Entity 설계</h2>
+                        
+                        <pre><code class="language-kotlin">// domain/entity/User.kt
+@Entity
+@Table(name = "users")
+class User(
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    val id: UUID? = null,
+    
+    @Column(unique = true, nullable = false)
+    var email: String,
+    
+    @Column(nullable = false)
+    var password: String,
+    
+    @Column(nullable = false)
+    var name: String,
+    
+    @Enumerated(EnumType.STRING)
+    var role: Role = Role.USER,
+    
+    @Column(name = "created_at")
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+    
+    @Column(name = "updated_at")
+    var updatedAt: LocalDateTime = LocalDateTime.now()
+) {
+    @PreUpdate
+    fun onUpdate() {
+        updatedAt = LocalDateTime.now()
+    }
+}
+
+enum class Role {
+    USER, ADMIN
+}
+
+// domain/entity/Post.kt
+@Entity
+@Table(name = "posts")
+class Post(
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    val id: UUID? = null,
+    
+    @Column(nullable = false)
+    var title: String,
+    
+    @Column(columnDefinition = "TEXT")
+    var content: String,
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id")
+    val author: User,
+    
+    @Column(name = "created_at")
+    val createdAt: LocalDateTime = LocalDateTime.now()
+)</code></pre>
+                        
+                        <h2>Repository Layer</h2>
+                        
+                        <pre><code class="language-kotlin">// domain/repository/UserRepository.kt
+interface UserRepository : JpaRepository&lt;User, UUID&gt; {
+    fun findByEmail(email: String): User?
+    fun existsByEmail(email: String): Boolean
+}
+
+// domain/repository/PostRepository.kt
+interface PostRepository : JpaRepository&lt;Post, UUID&gt; {
+    fun findByAuthorId(authorId: UUID, pageable: Pageable): Page&lt;Post&gt;
+    
+    @Query("""
+        SELECT p FROM Post p 
+        WHERE p.title LIKE %:keyword% 
+        OR p.content LIKE %:keyword%
+        ORDER BY p.createdAt DESC
+    """)
+    fun search(keyword: String, pageable: Pageable): Page&lt;Post&gt;
+}</code></pre>
+                        
+                        <h2>DTO 정의</h2>
+                        
+                        <pre><code class="language-kotlin">// api/dto/UserDto.kt
+data class SignUpRequest(
+    @field:Email(message = "올바른 이메일 형식이 아닙니다")
+    val email: String,
+    
+    @field:Size(min = 8, message = "비밀번호는 8자 이상이어야 합니다")
+    val password: String,
+    
+    @field:NotBlank(message = "이름은 필수입니다")
+    val name: String
+)
+
+data class LoginRequest(
+    @field:Email
+    val email: String,
+    val password: String
+)
+
+data class UserResponse(
+    val id: UUID,
+    val email: String,
+    val name: String,
+    val role: Role,
+    val createdAt: LocalDateTime
+) {
+    companion object {
+        fun from(user: User) = UserResponse(
+            id = user.id!!,
+            email = user.email,
+            name = user.name,
+            role = user.role,
+            createdAt = user.createdAt
+        )
+    }
+}
+
+data class TokenResponse(
+    val accessToken: String,
+    val refreshToken: String,
+    val expiresIn: Long
+)</code></pre>
+                        
+                        <h2>Service Layer</h2>
+                        
+                        <pre><code class="language-kotlin">// application/service/AuthService.kt
+@Service
+class AuthService(
+    private val userRepository: UserRepository,
+    private val passwordEncoder: PasswordEncoder,
+    private val jwtProvider: JwtProvider
+) {
+    @Transactional
+    fun signUp(request: SignUpRequest): UserResponse {
+        if (userRepository.existsByEmail(request.email)) {
+            throw DuplicateEmailException("이미 등록된 이메일입니다")
+        }
+        
+        val user = User(
+            email = request.email,
+            password = passwordEncoder.encode(request.password),
+            name = request.name
+        )
+        
+        return UserResponse.from(userRepository.save(user))
+    }
+    
+    fun login(request: LoginRequest): TokenResponse {
+        val user = userRepository.findByEmail(request.email)
+            ?: throw AuthenticationException("이메일 또는 비밀번호가 올바르지 않습니다")
+        
+        if (!passwordEncoder.matches(request.password, user.password)) {
+            throw AuthenticationException("이메일 또는 비밀번호가 올바르지 않습니다")
+        }
+        
+        return jwtProvider.generateTokens(user)
+    }
+    
+    fun refreshToken(refreshToken: String): TokenResponse {
+        val userId = jwtProvider.validateRefreshToken(refreshToken)
+        val user = userRepository.findById(userId)
+            .orElseThrow { UserNotFoundException() }
+        
+        return jwtProvider.generateTokens(user)
+    }
+}
+
+// application/service/PostService.kt
+@Service
+class PostService(
+    private val postRepository: PostRepository,
+    private val userRepository: UserRepository
+) {
+    @Transactional(readOnly = true)
+    fun getPosts(pageable: Pageable): Page&lt;PostResponse&gt; {
+        return postRepository.findAll(pageable).map { PostResponse.from(it) }
+    }
+    
+    @Transactional(readOnly = true)
+    fun getPost(id: UUID): PostResponse {
+        val post = postRepository.findById(id)
+            .orElseThrow { PostNotFoundException() }
+        return PostResponse.from(post)
+    }
+    
+    @Transactional
+    fun createPost(request: CreatePostRequest, userId: UUID): PostResponse {
+        val author = userRepository.getReferenceById(userId)
+        val post = Post(
+            title = request.title,
+            content = request.content,
+            author = author
+        )
+        return PostResponse.from(postRepository.save(post))
+    }
+    
+    @Transactional
+    fun updatePost(id: UUID, request: UpdatePostRequest, userId: UUID): PostResponse {
+        val post = postRepository.findById(id)
+            .orElseThrow { PostNotFoundException() }
+        
+        if (post.author.id != userId) {
+            throw ForbiddenException("수정 권한이 없습니다")
+        }
+        
+        request.title?.let { post.title = it }
+        request.content?.let { post.content = it }
+        
+        return PostResponse.from(post)
+    }
+}</code></pre>
+                        
+                        <h2>JWT 인증</h2>
+                        
+                        <pre><code class="language-kotlin">// infrastructure/security/JwtProvider.kt
+@Component
+class JwtProvider(
+    @Value("\${jwt.secret}") private val secret: String,
+    @Value("\${jwt.access-expiration}") private val accessExpiration: Long,
+    @Value("\${jwt.refresh-expiration}") private val refreshExpiration: Long
+) {
+    private val key: SecretKey by lazy {
+        Keys.hmacShaKeyFor(secret.toByteArray())
+    }
+    
+    fun generateTokens(user: User): TokenResponse {
+        val now = Date()
+        val accessToken = createToken(user, now, accessExpiration)
+        val refreshToken = createToken(user, now, refreshExpiration)
+        
+        return TokenResponse(
+            accessToken = accessToken,
+            refreshToken = refreshToken,
+            expiresIn = accessExpiration
+        )
+    }
+    
+    private fun createToken(user: User, now: Date, expiration: Long): String {
+        return Jwts.builder()
+            .subject(user.id.toString())
+            .claim("email", user.email)
+            .claim("role", user.role.name)
+            .issuedAt(now)
+            .expiration(Date(now.time + expiration))
+            .signWith(key)
+            .compact()
+    }
+    
+    fun validateToken(token: String): UUID {
+        val claims = Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .payload
+        
+        return UUID.fromString(claims.subject)
+    }
+}
+
+// infrastructure/security/JwtAuthenticationFilter.kt
+@Component
+class JwtAuthenticationFilter(
+    private val jwtProvider: JwtProvider,
+    private val userDetailsService: UserDetailsService
+) : OncePerRequestFilter() {
+
+    override fun doFilterInternal(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        filterChain: FilterChain
+    ) {
+        val token = resolveToken(request)
+        
+        if (token != null) {
+            try {
+                val userId = jwtProvider.validateToken(token)
+                val userDetails = userDetailsService.loadUserByUsername(userId.toString())
+                val authentication = UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.authorities
+                )
+                SecurityContextHolder.getContext().authentication = authentication
+            } catch (e: Exception) {
+                logger.debug("JWT validation failed: ${e.message}")
+            }
+        }
+        
+        filterChain.doFilter(request, response)
+    }
+    
+    private fun resolveToken(request: HttpServletRequest): String? {
+        val bearerToken = request.getHeader("Authorization")
+        return if (bearerToken?.startsWith("Bearer ") == true) {
+            bearerToken.substring(7)
+        } else null
+    }
+}</code></pre>
+                        
+                        <h2>Controller Layer</h2>
+                        
+                        <pre><code class="language-kotlin">// api/controller/AuthController.kt
+@RestController
+@RequestMapping("/api/v1/auth")
+class AuthController(private val authService: AuthService) {
+    
+    @PostMapping("/signup")
+    fun signUp(@Valid @RequestBody request: SignUpRequest): ResponseEntity&lt;UserResponse&gt; {
+        val user = authService.signUp(request)
+        return ResponseEntity.status(HttpStatus.CREATED).body(user)
+    }
+    
+    @PostMapping("/login")
+    fun login(@Valid @RequestBody request: LoginRequest): ResponseEntity&lt;TokenResponse&gt; {
+        val tokens = authService.login(request)
+        return ResponseEntity.ok(tokens)
+    }
+    
+    @PostMapping("/refresh")
+    fun refresh(@RequestBody request: RefreshTokenRequest): ResponseEntity&lt;TokenResponse&gt; {
+        val tokens = authService.refreshToken(request.refreshToken)
+        return ResponseEntity.ok(tokens)
+    }
+}
+
+// api/controller/PostController.kt
+@RestController
+@RequestMapping("/api/v1/posts")
+class PostController(private val postService: PostService) {
+    
+    @GetMapping
+    fun getPosts(
+        @PageableDefault(size = 20, sort = ["createdAt"], direction = Sort.Direction.DESC)
+        pageable: Pageable
+    ): ResponseEntity&lt;Page&lt;PostResponse&gt;&gt; {
+        return ResponseEntity.ok(postService.getPosts(pageable))
+    }
+    
+    @GetMapping("/{id}")
+    fun getPost(@PathVariable id: UUID): ResponseEntity&lt;PostResponse&gt; {
+        return ResponseEntity.ok(postService.getPost(id))
+    }
+    
+    @PostMapping
+    @PreAuthorize("isAuthenticated()")
+    fun createPost(
+        @Valid @RequestBody request: CreatePostRequest,
+        @AuthenticationPrincipal userDetails: CustomUserDetails
+    ): ResponseEntity&lt;PostResponse&gt; {
+        val post = postService.createPost(request, userDetails.userId)
+        return ResponseEntity.status(HttpStatus.CREATED).body(post)
+    }
+    
+    @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    fun updatePost(
+        @PathVariable id: UUID,
+        @Valid @RequestBody request: UpdatePostRequest,
+        @AuthenticationPrincipal userDetails: CustomUserDetails
+    ): ResponseEntity&lt;PostResponse&gt; {
+        val post = postService.updatePost(id, request, userDetails.userId)
+        return ResponseEntity.ok(post)
+    }
+}</code></pre>
+                        
+                        <h2>예외 처리</h2>
+                        
+                        <pre><code class="language-kotlin">// api/exception/GlobalExceptionHandler.kt
+@RestControllerAdvice
+class GlobalExceptionHandler {
+    
+    @ExceptionHandler(MethodArgumentNotValidException::class)
+    fun handleValidationException(e: MethodArgumentNotValidException): ResponseEntity&lt;ErrorResponse&gt; {
+        val errors = e.bindingResult.fieldErrors.associate { it.field to it.defaultMessage }
+        return ResponseEntity.badRequest().body(
+            ErrorResponse(
+                code = "VALIDATION_ERROR",
+                message = "입력값이 올바르지 않습니다",
+                details = errors
+            )
+        )
+    }
+    
+    @ExceptionHandler(AuthenticationException::class)
+    fun handleAuthException(e: AuthenticationException): ResponseEntity&lt;ErrorResponse&gt; {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+            ErrorResponse(code = "AUTH_ERROR", message = e.message ?: "인증 실패")
+        )
+    }
+    
+    @ExceptionHandler(NotFoundException::class)
+    fun handleNotFoundException(e: NotFoundException): ResponseEntity&lt;ErrorResponse&gt; {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+            ErrorResponse(code = "NOT_FOUND", message = e.message ?: "리소스를 찾을 수 없습니다")
+        )
+    }
+    
+    @ExceptionHandler(Exception::class)
+    fun handleException(e: Exception): ResponseEntity&lt;ErrorResponse&gt; {
+        logger.error("Unexpected error", e)
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+            ErrorResponse(code = "SERVER_ERROR", message = "서버 오류가 발생했습니다")
+        )
+    }
+}
+
+data class ErrorResponse(
+    val code: String,
+    val message: String,
+    val details: Any? = null
+)</code></pre>
+                        
+                        <h2>테스트 코드</h2>
+                        
+                        <pre><code class="language-kotlin">// AuthServiceTest.kt
+@SpringBootTest
+class AuthServiceTest {
+    @Autowired lateinit var authService: AuthService
+    @Autowired lateinit var userRepository: UserRepository
+    
+    @BeforeEach
+    fun setup() {
+        userRepository.deleteAll()
+    }
+    
+    @Test
+    fun `회원가입 성공`() {
+        // given
+        val request = SignUpRequest(
+            email = "test@example.com",
+            password = "password123",
+            name = "테스트"
+        )
+        
+        // when
+        val result = authService.signUp(request)
+        
+        // then
+        assertThat(result.email).isEqualTo(request.email)
+        assertThat(result.name).isEqualTo(request.name)
+    }
+    
+    @Test
+    fun `중복 이메일 회원가입 실패`() {
+        // given
+        val request = SignUpRequest("test@example.com", "password123", "테스트")
+        authService.signUp(request)
+        
+        // when & then
+        assertThrows&lt;DuplicateEmailException&gt; {
+            authService.signUp(request)
+        }
+    }
+}
+
+// PostControllerTest.kt
+@WebMvcTest(PostController::class)
+class PostControllerTest {
+    @Autowired lateinit var mockMvc: MockMvc
+    @MockkBean lateinit var postService: PostService
+    
+    @Test
+    @WithMockUser
+    fun `포스트 목록 조회`() {
+        // given
+        every { postService.getPosts(any()) } returns Page.empty()
+        
+        // when & then
+        mockMvc.get("/api/v1/posts") {
+            contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+            status { isOk() }
+        }
+    }
+}</code></pre>
+                        
+                        <h2>마무리</h2>
+                        
+                        <p>
+                            Kotlin과 Spring Boot의 조합은 Java보다 간결하고 안전한 백엔드 코드를 작성할 수 있게 해줍니다. 
+                            특히 모바일 개발자가 Kotlin에 익숙하다면 러닝 커브 없이 백엔드 개발을 시작할 수 있습니다.
+                        </p>
+                        
+                        <div class="post-tags" style="margin-top: var(--space-2xl);">
+                            <span class="post-tag">#Spring Boot</span>
+                            <span class="post-tag">#Kotlin</span>
+                            <span class="post-tag">#REST API</span>
+                            <span class="post-tag">#JWT</span>
+                            <span class="post-tag">#JPA</span>
+                        </div>
+                        
+                        <div class="post-navigation">
+                            <a href="/posts/ios/swift-concurrency-async-await/" class="post-nav-item">
+                                <span class="post-nav-label">← Previous Article</span>
+                                <span class="post-nav-title">Swift Concurrency</span>
+                            </a>
+                            <a href="/posts/server/docker-kubernetes-mobile-backend/" class="post-nav-item">
+                                <span class="post-nav-label">Next Article →</span>
+                                <span class="post-nav-title">Docker & Kubernetes</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">© 2024 Chansaem Lee. Built with ❤️</p>
+                <div class="footer-links">
+                    <a href="/categories/" class="footer-link">Categories</a>
+                    <a href="/archives/" class="footer-link">Archives</a>
+                    <a href="https://github.com/inyion" class="footer-link" target="_blank">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
+

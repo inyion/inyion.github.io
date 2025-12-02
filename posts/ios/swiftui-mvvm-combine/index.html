@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftUI + MVVM + Combine: iOS 앱 아키텍처 완전 정복 | ChanDev</title>
+    <meta name="description" content="SwiftUI의 선언적 UI와 Combine의 반응형 프로그래밍을 MVVM 패턴으로 통합하는 방법">
+    <meta name="author" content="Chansaem Lee">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/modern.css">
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ChanDev</span>
+                </a>
+                <nav>
+                    <ul class="nav-menu" id="navMenu">
+                        <li><a href="/" class="nav-link">Home</a></li>
+                        <li><a href="/categories/" class="nav-link">Categories</a></li>
+                        <li><a href="/archives/" class="nav-link">Archives</a></li>
+                        <li><a href="/#about" class="nav-link">About</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="post-page">
+        <article>
+            <div class="post-header">
+                <div class="container">
+                    <span class="post-category ios">
+                        <i class="fa-brands fa-apple"></i> iOS
+                    </span>
+                    <h1 class="post-title">SwiftUI + MVVM + Combine: iOS 앱 아키텍처 완전 정복</h1>
+                    <div class="post-meta">
+                        <span class="post-meta-item">
+                            <i class="fa fa-calendar"></i>
+                            2024년 11월 10일
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-clock"></i>
+                            14 min read
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-user"></i>
+                            Chansaem Lee
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                <div class="container container-narrow">
+                    <div class="post-body">
+                        <p>
+                            SwiftUI와 Combine의 조합은 iOS 앱 개발의 패러다임을 바꿔놓았습니다. 
+                            이 글에서는 <strong>MVVM 패턴</strong>을 중심으로 현대적인 iOS 앱 아키텍처를 설계하는 방법을 알아봅니다.
+                        </p>
+                        
+                        <h2>SwiftUI의 선언적 UI</h2>
+                        
+                        <p>SwiftUI는 상태(State)에 따라 UI가 자동으로 업데이트되는 선언적 패러다임을 사용합니다.</p>
+                        
+                        <pre><code class="language-swift">struct ContentView: View {
+    @State private var count = 0
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Count: \(count)")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+            
+            HStack(spacing: 16) {
+                Button("Decrease") {
+                    count -= 1
+                }
+                .buttonStyle(.bordered)
+                
+                Button("Increase") {
+                    count += 1
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding()
+    }
+}</code></pre>
+                        
+                        <h2>Property Wrappers 이해하기</h2>
+                        
+                        <pre><code class="language-swift">// @State: View 내부의 간단한 상태
+@State private var isLoading = false
+
+// @Binding: 부모로부터 전달받은 상태의 양방향 바인딩
+@Binding var selectedItem: Item?
+
+// @StateObject: View가 소유하는 ObservableObject
+@StateObject private var viewModel = UserViewModel()
+
+// @ObservedObject: 외부에서 주입받는 ObservableObject
+@ObservedObject var viewModel: UserViewModel
+
+// @EnvironmentObject: 환경을 통해 전달되는 객체
+@EnvironmentObject var appState: AppState
+
+// @Published: ObservableObject 내부 프로퍼티 (변경 시 알림)
+@Published var users: [User] = []</code></pre>
+                        
+                        <h2>MVVM 아키텍처 설계</h2>
+                        
+                        <h3>Model 정의</h3>
+                        
+                        <pre><code class="language-swift">// Models/User.swift
+struct User: Identifiable, Codable, Equatable {
+    let id: UUID
+    let name: String
+    let email: String
+    let avatarURL: URL?
+    let createdAt: Date
+    
+    var displayName: String {
+        name.isEmpty ? email.components(separatedBy: "@").first ?? "" : name
+    }
+}
+
+// Models/Result+Extensions.swift
+extension Result {
+    var isSuccess: Bool {
+        if case .success = self { return true }
+        return false
+    }
+    
+    var error: Failure? {
+        if case .failure(let error) = self { return error }
+        return nil
+    }
+}</code></pre>
+                        
+                        <h3>ViewModel 구현</h3>
+                        
+                        <pre><code class="language-swift">// ViewModels/UserListViewModel.swift
+import Foundation
+import Combine
+
+@MainActor
+final class UserListViewModel: ObservableObject {
+    // MARK: - Published Properties
+    @Published private(set) var users: [User] = []
+    @Published private(set) var isLoading = false
+    @Published private(set) var error: Error?
+    @Published var searchText = ""
+    
+    var filteredUsers: [User] {
+        guard !searchText.isEmpty else { return users }
+        return users.filter { 
+            $0.name.localizedCaseInsensitiveContains(searchText) ||
+            $0.email.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+    
+    // MARK: - Dependencies
+    private let userRepository: UserRepositoryProtocol
+    private var cancellables = Set&lt;AnyCancellable&gt;()
+    
+    // MARK: - Initialization
+    init(userRepository: UserRepositoryProtocol = UserRepository()) {
+        self.userRepository = userRepository
+        setupBindings()
+    }
+    
+    private func setupBindings() {
+        // 검색어 변경 시 debounce 적용
+        $searchText
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+    }
+    
+    // MARK: - Public Methods
+    func loadUsers() async {
+        isLoading = true
+        error = nil
+        
+        do {
+            users = try await userRepository.fetchUsers()
+        } catch {
+            self.error = error
+        }
+        
+        isLoading = false
+    }
+    
+    func deleteUser(_ user: User) async {
+        do {
+            try await userRepository.deleteUser(user.id)
+            users.removeAll { $0.id == user.id }
+        } catch {
+            self.error = error
+        }
+    }
+    
+    func refresh() async {
+        await loadUsers()
+    }
+}</code></pre>
+                        
+                        <h3>View 구현</h3>
+                        
+                        <pre><code class="language-swift">// Views/UserListView.swift
+import SwiftUI
+
+struct UserListView: View {
+    @StateObject private var viewModel = UserListViewModel()
+    
+    var body: some View {
+        NavigationStack {
+            Group {
+                if viewModel.isLoading && viewModel.users.isEmpty {
+                    LoadingView()
+                } else if let error = viewModel.error, viewModel.users.isEmpty {
+                    ErrorView(error: error) {
+                        Task { await viewModel.loadUsers() }
+                    }
+                } else {
+                    userList
+                }
+            }
+            .navigationTitle("Users")
+            .searchable(text: $viewModel.searchText, prompt: "Search users")
+            .refreshable {
+                await viewModel.refresh()
+            }
+        }
+        .task {
+            await viewModel.loadUsers()
+        }
+    }
+    
+    private var userList: some View {
+        List {
+            ForEach(viewModel.filteredUsers) { user in
+                NavigationLink(value: user) {
+                    UserRowView(user: user)
+                }
+            }
+            .onDelete(perform: deleteUsers)
+        }
+        .navigationDestination(for: User.self) { user in
+            UserDetailView(user: user)
+        }
+        .overlay {
+            if viewModel.filteredUsers.isEmpty {
+                ContentUnavailableView.search(text: viewModel.searchText)
+            }
+        }
+    }
+    
+    private func deleteUsers(at offsets: IndexSet) {
+        Task {
+            for index in offsets {
+                let user = viewModel.filteredUsers[index]
+                await viewModel.deleteUser(user)
+            }
+        }
+    }
+}
+
+// Views/Components/UserRowView.swift
+struct UserRowView: View {
+    let user: User
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            AsyncImage(url: user.avatarURL) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Circle()
+                    .fill(Color.gray.opacity(0.3))
+            }
+            .frame(width: 50, height: 50)
+            .clipShape(Circle())
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(user.displayName)
+                    .font(.headline)
+                
+                Text(user.email)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}</code></pre>
+                        
+                        <h2>Combine을 활용한 반응형 프로그래밍</h2>
+                        
+                        <pre><code class="language-swift">// Services/UserRepository.swift
+import Foundation
+import Combine
+
+protocol UserRepositoryProtocol {
+    func fetchUsers() async throws -> [User]
+    func fetchUser(id: UUID) async throws -> User
+    func deleteUser(_ id: UUID) async throws
+    func observeUsers() -> AnyPublisher&lt;[User], Never&gt;
+}
+
+final class UserRepository: UserRepositoryProtocol {
+    private let apiClient: APIClient
+    private let cache: UserCache
+    
+    private let usersSubject = CurrentValueSubject&lt;[User], Never&gt;([])
+    
+    init(apiClient: APIClient = .shared, cache: UserCache = .shared) {
+        self.apiClient = apiClient
+        self.cache = cache
+    }
+    
+    func fetchUsers() async throws -> [User] {
+        // 캐시 확인
+        if let cached = cache.getUsers(), !cached.isEmpty {
+            usersSubject.send(cached)
+            
+            // 백그라운드에서 새로고침
+            Task.detached(priority: .background) { [weak self] in
+                try? await self?.refreshUsers()
+            }
+            
+            return cached
+        }
+        
+        return try await refreshUsers()
+    }
+    
+    @discardableResult
+    private func refreshUsers() async throws -> [User] {
+        let users: [User] = try await apiClient.request(.getUsers)
+        cache.saveUsers(users)
+        usersSubject.send(users)
+        return users
+    }
+    
+    func observeUsers() -> AnyPublisher&lt;[User], Never&gt; {
+        usersSubject.eraseToAnyPublisher()
+    }
+    
+    // ... 나머지 구현
+}</code></pre>
+                        
+                        <h3>Combine 연산자 활용</h3>
+                        
+                        <pre><code class="language-swift">// 검색 기능 구현
+class SearchViewModel: ObservableObject {
+    @Published var searchText = ""
+    @Published private(set) var results: [SearchResult] = []
+    @Published private(set) var isSearching = false
+    
+    private let searchService: SearchService
+    private var cancellables = Set&lt;AnyCancellable&gt;()
+    
+    init(searchService: SearchService = .shared) {
+        self.searchService = searchService
+        
+        $searchText
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .filter { !$0.isEmpty }
+            .handleEvents(receiveOutput: { [weak self] _ in
+                self?.isSearching = true
+            })
+            .flatMap { [searchService] query in
+                searchService.search(query: query)
+                    .catch { _ in Just([]) }
+            }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] results in
+                self?.results = results
+                self?.isSearching = false
+            }
+            .store(in: &cancellables)
+    }
+}
+
+// 여러 Publisher 결합
+func loadDashboard() -> AnyPublisher&lt;Dashboard, Error&gt; {
+    Publishers.Zip3(
+        userRepository.fetchCurrentUser(),
+        statsRepository.fetchStats(),
+        notificationRepository.fetchUnreadCount()
+    )
+    .map { user, stats, unreadCount in
+        Dashboard(user: user, stats: stats, unreadCount: unreadCount)
+    }
+    .eraseToAnyPublisher()
+}</code></pre>
+                        
+                        <h2>의존성 주입</h2>
+                        
+                        <pre><code class="language-swift">// DI/DependencyContainer.swift
+@MainActor
+final class DependencyContainer: ObservableObject {
+    static let shared = DependencyContainer()
+    
+    // Repositories
+    lazy var userRepository: UserRepositoryProtocol = UserRepository()
+    lazy var authRepository: AuthRepositoryProtocol = AuthRepository()
+    
+    // Services
+    lazy var analyticsService: AnalyticsService = AnalyticsService()
+    
+    private init() {}
+}
+
+// Environment Key
+struct DependencyContainerKey: EnvironmentKey {
+    static let defaultValue = DependencyContainer.shared
+}
+
+extension EnvironmentValues {
+    var dependencies: DependencyContainer {
+        get { self[DependencyContainerKey.self] }
+        set { self[DependencyContainerKey.self] = newValue }
+    }
+}
+
+// 사용
+struct ContentView: View {
+    @Environment(\.dependencies) private var dependencies
+    
+    var body: some View {
+        UserListView(
+            viewModel: UserListViewModel(
+                userRepository: dependencies.userRepository
+            )
+        )
+    }
+}</code></pre>
+                        
+                        <h2>테스트 전략</h2>
+                        
+                        <pre><code class="language-swift">// Tests/UserListViewModelTests.swift
+import XCTest
+import Combine
+@testable import MyApp
+
+@MainActor
+final class UserListViewModelTests: XCTestCase {
+    var sut: UserListViewModel!
+    var mockRepository: MockUserRepository!
+    var cancellables: Set&lt;AnyCancellable&gt;!
+    
+    override func setUp() {
+        super.setUp()
+        mockRepository = MockUserRepository()
+        sut = UserListViewModel(userRepository: mockRepository)
+        cancellables = []
+    }
+    
+    func test_loadUsers_success() async {
+        // Given
+        let expectedUsers = [User.mock(), User.mock()]
+        mockRepository.usersToReturn = expectedUsers
+        
+        // When
+        await sut.loadUsers()
+        
+        // Then
+        XCTAssertEqual(sut.users, expectedUsers)
+        XCTAssertFalse(sut.isLoading)
+        XCTAssertNil(sut.error)
+    }
+    
+    func test_loadUsers_failure() async {
+        // Given
+        mockRepository.errorToThrow = NSError(domain: "", code: -1)
+        
+        // When
+        await sut.loadUsers()
+        
+        // Then
+        XCTAssertTrue(sut.users.isEmpty)
+        XCTAssertFalse(sut.isLoading)
+        XCTAssertNotNil(sut.error)
+    }
+    
+    func test_filteredUsers_withSearchText() async {
+        // Given
+        mockRepository.usersToReturn = [
+            User(id: UUID(), name: "John", email: "john@test.com", ...),
+            User(id: UUID(), name: "Jane", email: "jane@test.com", ...)
+        ]
+        await sut.loadUsers()
+        
+        // When
+        sut.searchText = "john"
+        
+        // Then
+        XCTAssertEqual(sut.filteredUsers.count, 1)
+        XCTAssertEqual(sut.filteredUsers.first?.name, "John")
+    }
+}
+
+// Mocks/MockUserRepository.swift
+final class MockUserRepository: UserRepositoryProtocol {
+    var usersToReturn: [User] = []
+    var errorToThrow: Error?
+    
+    func fetchUsers() async throws -> [User] {
+        if let error = errorToThrow {
+            throw error
+        }
+        return usersToReturn
+    }
+}</code></pre>
+                        
+                        <h2>마무리</h2>
+                        
+                        <p>
+                            SwiftUI + MVVM + Combine 조합은 iOS 앱 개발에서 강력한 패턴입니다. 
+                            Property Wrapper를 잘 이해하고, Combine의 연산자를 적절히 활용하면 
+                            깔끔하고 테스트 가능한 코드를 작성할 수 있습니다.
+                        </p>
+                        
+                        <div class="post-tags" style="margin-top: var(--space-2xl);">
+                            <span class="post-tag">#SwiftUI</span>
+                            <span class="post-tag">#MVVM</span>
+                            <span class="post-tag">#Combine</span>
+                            <span class="post-tag">#iOS</span>
+                            <span class="post-tag">#Swift</span>
+                        </div>
+                        
+                        <div class="post-navigation">
+                            <a href="/posts/android/android-performance-optimization/" class="post-nav-item">
+                                <span class="post-nav-label">← Previous Article</span>
+                                <span class="post-nav-title">Android 성능 최적화</span>
+                            </a>
+                            <a href="/posts/ios/swift-concurrency-async-await/" class="post-nav-item">
+                                <span class="post-nav-label">Next Article →</span>
+                                <span class="post-nav-title">Swift Concurrency: async/await</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">© 2024 Chansaem Lee. Built with ❤️</p>
+                <div class="footer-links">
+                    <a href="/categories/" class="footer-link">Categories</a>
+                    <a href="/archives/" class="footer-link">Archives</a>
+                    <a href="https://github.com/inyion" class="footer-link" target="_blank">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
+

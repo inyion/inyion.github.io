@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android 성능 최적화: 메모리 누수부터 UI 렌더링까지 | ChanDev</title>
+    <meta name="description" content="LeakCanary, Android Profiler를 활용한 메모리 분석부터 Compose 리컴포지션 최적화, 앱 시작 시간 개선까지">
+    <meta name="author" content="Chansaem Lee">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/modern.css">
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ChanDev</span>
+                </a>
+                <nav>
+                    <ul class="nav-menu" id="navMenu">
+                        <li><a href="/" class="nav-link">Home</a></li>
+                        <li><a href="/categories/" class="nav-link">Categories</a></li>
+                        <li><a href="/archives/" class="nav-link">Archives</a></li>
+                        <li><a href="/#about" class="nav-link">About</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="post-page">
+        <article>
+            <div class="post-header">
+                <div class="container">
+                    <span class="post-category android">
+                        <i class="fa-brands fa-android"></i> Android
+                    </span>
+                    <h1 class="post-title">Android 성능 최적화: 메모리 누수부터 UI 렌더링까지</h1>
+                    <div class="post-meta">
+                        <span class="post-meta-item">
+                            <i class="fa fa-calendar"></i>
+                            2024년 11월 18일
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-clock"></i>
+                            10 min read
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-user"></i>
+                            Chansaem Lee
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                <div class="container container-narrow">
+                    <div class="post-body">
+                        <p>
+                            사용자 경험을 결정짓는 가장 중요한 요소 중 하나는 <strong>앱 성능</strong>입니다. 
+                            이 글에서는 실무에서 자주 마주치는 성능 이슈와 해결 방법을 다룹니다.
+                        </p>
+                        
+                        <h2>메모리 누수 탐지 및 해결</h2>
+                        
+                        <h3>LeakCanary 설정</h3>
+                        
+                        <pre><code class="language-kotlin">// build.gradle.kts
+dependencies {
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
+}
+
+// 자동으로 Activity, Fragment, View, ViewModel 누수 탐지</code></pre>
+                        
+                        <h3>흔한 메모리 누수 패턴</h3>
+                        
+                        <pre><code class="language-kotlin">// ❌ Bad: Context 누수
+class MyManager private constructor(private val context: Context) {
+    companion object {
+        @Volatile
+        private var instance: MyManager? = null
+        
+        fun getInstance(context: Context): MyManager {
+            return instance ?: synchronized(this) {
+                instance ?: MyManager(context).also { instance = it }
+            }
+        }
+    }
+}
+
+// ✅ Good: ApplicationContext 사용
+class MyManager private constructor(private val context: Context) {
+    companion object {
+        fun getInstance(context: Context): MyManager {
+            return instance ?: synchronized(this) {
+                instance ?: MyManager(context.applicationContext)
+                    .also { instance = it }
+            }
+        }
+    }
+}
+
+// ❌ Bad: 익명 내부 클래스에서 Activity 참조
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        handler.postDelayed({
+            // this@MainActivity 암묵적 참조 → 누수!
+            updateUI()
+        }, 10000)
+    }
+}
+
+// ✅ Good: WeakReference 또는 Lifecycle 활용
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        lifecycleScope.launch {
+            delay(10000)
+            updateUI()  // Lifecycle에 맞춰 자동 취소
+        }
+    }
+}</code></pre>
+                        
+                        <h2>Compose 리컴포지션 최적화</h2>
+                        
+                        <h3>불필요한 리컴포지션 방지</h3>
+                        
+                        <pre><code class="language-kotlin">// Layout Inspector로 리컴포지션 횟수 확인 가능
+
+// ❌ Bad: 매번 새 람다 생성
+@Composable
+fun UserList(users: List&lt;User&gt;, onUserClick: (User) -> Unit) {
+    LazyColumn {
+        items(users) { user ->
+            UserItem(
+                user = user,
+                onClick = { onUserClick(user) }  // 매번 새 람다!
+            )
+        }
+    }
+}
+
+// ✅ Good: remember로 람다 안정화
+@Composable
+fun UserList(users: List&lt;User&gt;, onUserClick: (User) -> Unit) {
+    LazyColumn {
+        items(users, key = { it.id }) { user ->
+            val onClick = remember(user.id) { { onUserClick(user) } }
+            UserItem(user = user, onClick = onClick)
+        }
+    }
+}
+
+// ✅ Stable 어노테이션 활용
+@Stable
+class UserState(
+    val user: User,
+    val isLoading: Boolean
+)
+
+@Immutable
+data class UserUiModel(
+    val id: String,
+    val name: String
+)</code></pre>
+                        
+                        <h3>derivedStateOf 활용</h3>
+                        
+                        <pre><code class="language-kotlin">@Composable
+fun SearchResults(items: List&lt;Item&gt;, query: String) {
+    // ❌ Bad: query가 바뀔 때마다 전체 리컴포지션
+    val filteredItems = items.filter { it.name.contains(query) }
+    
+    // ✅ Good: 결과가 바뀔 때만 리컴포지션
+    val filteredItems by remember(items, query) {
+        derivedStateOf {
+            items.filter { it.name.contains(query, ignoreCase = true) }
+        }
+    }
+    
+    LazyColumn {
+        items(filteredItems, key = { it.id }) { item ->
+            ItemRow(item)
+        }
+    }
+}</code></pre>
+                        
+                        <h2>앱 시작 시간 최적화</h2>
+                        
+                        <h3>App Startup 라이브러리</h3>
+                        
+                        <pre><code class="language-kotlin">// 기존: Application.onCreate()에서 모든 초기화
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        // ❌ 동기적으로 모든 것 초기화 → 느린 시작
+        initAnalytics()
+        initCrashReporting()
+        initNetworking()
+        initDatabase()
+    }
+}
+
+// ✅ App Startup 사용
+class AnalyticsInitializer : Initializer&lt;Analytics&gt; {
+    override fun create(context: Context): Analytics {
+        return Analytics.init(context)
+    }
+    
+    override fun dependencies(): List&lt;Class&lt;out Initializer&lt;*&gt;&gt;&gt; {
+        return emptyList()  // 의존성 없음
+    }
+}
+
+class NetworkInitializer : Initializer&lt;OkHttpClient&gt; {
+    override fun create(context: Context): OkHttpClient {
+        return OkHttpClient.Builder().build()
+    }
+    
+    override fun dependencies() = listOf(AnalyticsInitializer::class.java)
+}</code></pre>
+                        
+                        <h3>지연 초기화</h3>
+                        
+                        <pre><code class="language-kotlin">// Lazy initialization
+val heavyObject by lazy {
+    HeavyObject()  // 처음 접근할 때 초기화
+}
+
+// Hilt에서 Provider 사용
+@Inject
+lateinit var analyticsProvider: Provider&lt;Analytics&gt;
+
+fun trackEvent(event: String) {
+    analyticsProvider.get().track(event)  // 필요할 때 생성
+}</code></pre>
+                        
+                        <h2>RecyclerView / LazyColumn 최적화</h2>
+                        
+                        <pre><code class="language-kotlin">// RecyclerView 최적화
+recyclerView.apply {
+    setHasFixedSize(true)
+    setItemViewCacheSize(20)
+    
+    // DiffUtil 사용
+    adapter = MyAdapter(DiffCallback())
+}
+
+// LazyColumn 최적화
+LazyColumn(
+    state = rememberLazyListState(),
+    // 뷰포트 밖 아이템 유지
+    modifier = Modifier.fillMaxSize()
+) {
+    items(
+        items = items,
+        key = { it.id },  // Stable key 필수!
+        contentType = { it.type }  // 타입별 재사용
+    ) { item ->
+        when (item.type) {
+            ItemType.HEADER -> HeaderItem(item)
+            ItemType.CONTENT -> ContentItem(item)
+        }
+    }
+}</code></pre>
+                        
+                        <h2>네트워크 최적화</h2>
+                        
+                        <pre><code class="language-kotlin">// OkHttp 캐싱
+val client = OkHttpClient.Builder()
+    .cache(Cache(cacheDir, 10 * 1024 * 1024))  // 10MB
+    .addInterceptor(CacheInterceptor())
+    .build()
+
+class CacheInterceptor : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+        val response = chain.proceed(request)
+        
+        return response.newBuilder()
+            .header("Cache-Control", "public, max-age=300")  // 5분 캐시
+            .build()
+    }
+}
+
+// Coil 이미지 캐싱
+val imageLoader = ImageLoader.Builder(context)
+    .memoryCache {
+        MemoryCache.Builder(context)
+            .maxSizePercent(0.25)  // 메모리의 25%
+            .build()
+    }
+    .diskCache {
+        DiskCache.Builder()
+            .directory(context.cacheDir.resolve("image_cache"))
+            .maxSizePercent(0.02)  // 디스크의 2%
+            .build()
+    }
+    .build()</code></pre>
+                        
+                        <h2>Baseline Profiles</h2>
+                        
+                        <pre><code class="language-kotlin">// 앱 시작 및 중요 경로 최적화
+// benchmark 모듈의 BaselineProfileGenerator.kt
+@RunWith(AndroidJUnit4::class)
+class BaselineProfileGenerator {
+    @get:Rule
+    val rule = BaselineProfileRule()
+
+    @Test
+    fun generateBaselineProfile() {
+        rule.collect(
+            packageName = "com.example.app",
+            stableIterations = 2,
+            maxIterations = 8
+        ) {
+            // 앱 시작
+            pressHome()
+            startActivityAndWait()
+            
+            // 중요 사용자 경로
+            device.findObject(By.text("Home")).click()
+            device.waitForIdle()
+            
+            device.findObject(By.text("Profile")).click()
+            device.waitForIdle()
+        }
+    }
+}</code></pre>
+                        
+                        <h2>프로파일링 도구 활용</h2>
+                        
+                        <pre><code class="language-kotlin">// Android Studio Profiler 활용
+// 1. CPU Profiler: 메서드 실행 시간 분석
+// 2. Memory Profiler: 힙 덤프, 할당 추적
+// 3. Network Profiler: API 호출 분석
+// 4. Energy Profiler: 배터리 소모 분석
+
+// 커스텀 트레이스 추가
+import androidx.tracing.trace
+
+suspend fun loadData() = trace("loadData") {
+    val users = trace("fetchUsers") { api.getUsers() }
+    val posts = trace("fetchPosts") { api.getPosts() }
+    processData(users, posts)
+}</code></pre>
+                        
+                        <h2>마무리</h2>
+                        
+                        <p>
+                            성능 최적화는 <strong>측정 → 분석 → 개선 → 검증</strong>의 반복입니다. 
+                            감으로 최적화하지 말고, 항상 프로파일링 도구로 측정한 후 개선하세요.
+                        </p>
+                        
+                        <div class="post-tags" style="margin-top: var(--space-2xl);">
+                            <span class="post-tag">#Performance</span>
+                            <span class="post-tag">#Memory</span>
+                            <span class="post-tag">#Profiling</span>
+                            <span class="post-tag">#Android</span>
+                            <span class="post-tag">#Compose</span>
+                        </div>
+                        
+                        <div class="post-navigation">
+                            <a href="/posts/android/kotlin-coroutines-flow-deep-dive/" class="post-nav-item">
+                                <span class="post-nav-label">← Previous Article</span>
+                                <span class="post-nav-title">Kotlin Coroutines & Flow 심층 분석</span>
+                            </a>
+                            <a href="/posts/ios/swiftui-mvvm-combine/" class="post-nav-item">
+                                <span class="post-nav-label">Next Article →</span>
+                                <span class="post-nav-title">SwiftUI + MVVM + Combine</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">© 2024 Chansaem Lee. Built with ❤️</p>
+                <div class="footer-links">
+                    <a href="/categories/" class="footer-link">Categories</a>
+                    <a href="/archives/" class="footer-link">Archives</a>
+                    <a href="https://github.com/inyion" class="footer-link" target="_blank">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
+

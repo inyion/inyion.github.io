@@ -1,360 +1,647 @@
-
 <!DOCTYPE html>
 <html lang="ko">
-    
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="Samsia Blog">
-    <title>Samsia Blog</title>
-    <meta name="author" content="Sam">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chansaem Lee | Senior Mobile Developer</title>
+    <meta name="description" content="14년차 시니어 Android 개발자의 기술 블로그. Android, iOS, Backend, Frontend 개발 경험과 인사이트를 공유합니다.">
+    <meta name="author" content="Chansaem Lee">
+    <meta name="keywords" content="Android, iOS, Kotlin, Swift, Mobile Development, Backend, Frontend, Developer Blog">
     
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Chansaem Lee | Senior Mobile Developer">
+    <meta property="og:description" content="10년차 시니어 모바일 개발자의 기술 블로그">
+    <meta property="og:url" content="https://inyion.github.io">
+    <meta property="og:image" content="https://inyion.github.io/assets/images/profile.jpg">
     
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Chansaem Lee | Senior Mobile Developer">
+    <meta name="twitter:description" content="10년차 시니어 모바일 개발자의 기술 블로그">
     
-    <meta name="description" content="Sam and Sia Blog using Hexo">
-<meta property="og:type" content="blog">
-<meta property="og:title" content="Samsia Blog">
-<meta property="og:url" content="http://inyion.github.io/index.html">
-<meta property="og:site_name" content="Samsia Blog">
-<meta property="og:description" content="Sam and Sia Blog using Hexo">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Samsia Blog">
-<meta name="twitter:description" content="Sam and Sia Blog using Hexo">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
     
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-        
-    
-    
-        <meta property="og:image" content="http://inyion.github.io/assets/images/profile.jpg"/>
-    
-    
-    
-    
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-pz4cc6y13wt2trzqa8l3n9v0yykr0sstdaheem7qj628nhjmhp9pfawvqawz.min.css">
-    <!--STYLES END-->
-    
-
-    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/assets/css/modern.css">
 </head>
-
-    <body>
-        <div id="blog">
-            <!-- Define author's picture -->
-
-
+<body>
+    <!-- Background Effects -->
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
     
-        
-            
-        
-    
-
-<header id="header" data-behavior="1">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
-    <div class="header-title">
-        <a class="header-title-link" href="/ ">Samsia Blog</a>
-    </div>
-    
-        
-            <a  class="header-right-picture "
-                href="#about">
-        
-        
-            <img class="header-picture" src="/assets/images/profile.jpg" alt="Author&#39;s picture"/>
-        
-        </a>
-    
-</header>
-
-            <!-- Define author's picture -->
-
-
-
-        
-    
-
-<nav id="sidebar" data-behavior="1">
-    <div class="sidebar-container">
-        
-            <div class="sidebar-profile">
-                <a href="/#about">
-                    <img class="sidebar-profile-picture" src="/assets/images/profile.jpg" alt="Author&#39;s picture"/>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ChanDev</span>
                 </a>
-                <h4 class="sidebar-profile-name">Sam</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>author.bio</p>
-</h5>
+                <nav>
+                    <ul class="nav-menu" id="navMenu">
+                        <li><a href="/" class="nav-link active">Home</a></li>
+                        <li><a href="/categories/" class="nav-link">Categories</a></li>
+                        <li><a href="/archives/" class="nav-link">Archives</a></li>
+                        <li><a href="#about" class="nav-link">About</a></li>
+                    </ul>
+                </nav>
                 
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <i class="fa fa-bars"></i>
+                </button>
             </div>
-        
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/ "
-                            
-                            title="Home"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-home" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Home</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/all-categories"
-                            
-                            title="Categories"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Categories</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/all-tags"
-                            
-                            title="Tags"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Tags</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/all-archives"
-                            
-                            title="Archives"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Archives</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link open-algolia-search"
-                             href="#search"
-                            
-                            title="Search"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-search" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Search</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="#about"
-                            
-                            title="About"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-question" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">About</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/atom.xml"
-                            
-                            title="RSS"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-lg fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-    </div>
-</nav>
-
-            
-            <div id="main" data-behavior="1"
-                 class="
-                        hasCoverMetaIn
-                        ">
-                <section class="postShorten-group main-content-wrap">
+        </div>
+    </header>
     
-    
-    <article class="postShorten postShorten--thumbnailimg-bottom" itemscope itemType="http://schema.org/BlogPosting">
-        <div class="postShorten-wrap">
-            
-            <div class="postShorten-header">
-                <h1 class="postShorten-title" itemprop="headline">
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="hero-badge">
+                        <span class="hero-badge-dot"></span>
+                        <span>Available for Tech Consulting</span>
+                    </div>
                     
-                        <a class="link-unstyled" href="/2017/05/22/post/">
-                            first post
+                    <h1 class="hero-title">
+                        Building <span class="gradient-text">Scalable</span><br>
+                        Mobile Experiences
+                    </h1>
+                    
+                    <p class="hero-description">
+                        14년차 시니어 모바일 개발자입니다. 웹 개발로 커리어를 시작해 백엔드와 Android를 함께 경험한 후, 
+                        Android 전문 개발자로 12년 이상 깊이 있는 경력을 쌓아왔습니다.
+                    </p>
+                    
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">14+</div>
+                            <div class="stat-label">Years Experience</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">50+</div>
+                            <div class="stat-label">Projects Delivered</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">1M+</div>
+                            <div class="stat-label">Users Impacted</div>
+                        </div>
+                    </div>
+                    
+                    <div class="hero-cta">
+                        <a href="#posts" class="btn btn-primary">
+                            <i class="fa fa-book-open"></i>
+                            Read Articles
                         </a>
-                    
-                </h1>
-                <div class="postShorten-meta">
-    <time itemprop="datePublished" datetime="2017-05-22T00:19:11+09:00">
-	
-		    5월 22, 2017
-    	
-    </time>
-    
-</div>
-
-            </div>
-            
-                <div class="postShorten-content" itemprop="articleBody">
-                    <p>ㅎㅎ 첫 작성이군요<br>앞으로 얼마나 이 블로그가 변화할지<br>두근두근 하군요.</p>
-
-                    
-                        
-
-                    
-                    
-                        <p>
-                            <a href="/2017/05/22/post/#post-footer" class="postShorten-excerpt_link link">
-                                Comment and share
-                            </a>
-                        </p>
-                    
-                </div>
-            
-        </div>
-        
-    </article>
-    
-    
-    <article class="postShorten postShorten--thumbnailimg-bottom" itemscope itemType="http://schema.org/BlogPosting">
-        <div class="postShorten-wrap">
-            
-            <div class="postShorten-header">
-                <h1 class="postShorten-title" itemprop="headline">
-                    
-                        <a class="link-unstyled" href="/2017/05/21/hello-world/">
-                            Hello World
+                        <a href="#about" class="btn btn-secondary">
+                            <i class="fa fa-user"></i>
+                            About Me
                         </a>
-                    
-                </h1>
-                <div class="postShorten-meta">
-    <time itemprop="datePublished" datetime="2017-05-21T21:47:15+09:00">
-	
-		    5월 21, 2017
-    	
-    </time>
-    
-</div>
-
-            </div>
-            
-                <div class="postShorten-content" itemprop="articleBody">
-                    <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
-
-                    
-                        
-
-                    
-                    
-                        <p>
-                            <a href="/2017/05/21/hello-world/#post-footer" class="postShorten-excerpt_link link">
-                                Comment and share
-                            </a>
-                        </p>
-                    
+                    </div>
                 </div>
-            
+                
+                <div class="hero-image">
+                    <div class="profile-card">
+                        <img src="/assets/images/profile.jpg" alt="Chansaem Lee" class="profile-avatar">
+                        <h3 class="profile-name">Chansaem Lee</h3>
+                        <p class="profile-role">Senior Mobile Developer</p>
+                        
+                        <div class="tech-stack">
+                            <span class="tech-tag android">Kotlin</span>
+                            <span class="tech-tag android">Jetpack Compose</span>
+                            <span class="tech-tag ios">Swift</span>
+                            <span class="tech-tag ios">SwiftUI</span>
+                            <span class="tech-tag server">Spring Boot</span>
+                            <span class="tech-tag server">Node.js</span>
+                            <span class="tech-tag web">React</span>
+                            <span class="tech-tag web">TypeScript</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-    </article>
+    </section>
     
-    <div class="pagination-bar">
-    <ul class="pagination">
-        
-        
-        <li class="pagination-number">page 1 of 1</li>
-    </ul>
-</div>
-
-</section>
-
-
-                <footer id="footer" class="main-content-wrap">
-    <span class="copyrights">
-        Copyrights &copy; 2018 Sam. All Rights Reserved.
-    </span>
-</footer>
-
+    <!-- Posts Section -->
+    <section class="section" id="posts">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">Latest Articles</p>
+                <h2 class="section-title">기술 블로그</h2>
+                <p class="section-description">
+                    모바일 개발부터 백엔드, 프론트엔드까지 다양한 기술 경험과 인사이트를 공유합니다.
+                </p>
             </div>
             
-        </div>
-        
-
-
-    
-        
-    
-
-<div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-remove"></i>
-        </div>
-        
-            <img id="about-card-picture" src="/assets/images/profile.jpg" alt="Author&#39;s picture"/>
-        
-            <h4 id="about-card-name">Sam</h4>
-        
-            <div id="about-card-bio"><p>author.bio</p>
-</div>
-        
-        
-            <div id="about-card-job">
-                <i class="fa fa-briefcase"></i>
-                <br/>
-                <p>author.job</p>
-
+            <!-- Category Tabs -->
+            <div class="category-tabs">
+                <button class="category-tab active" data-category="all">All</button>
+                <button class="category-tab" data-category="android">Android</button>
+                <button class="category-tab" data-category="ios">iOS</button>
+                <button class="category-tab" data-category="server">Backend</button>
+                <button class="category-tab" data-category="web">Frontend</button>
             </div>
+            
+            <!-- Posts Grid -->
+            <div class="posts-grid">
+                <!-- Featured Post -->
+                <article class="post-card featured-post" data-category="android">
+                    <div class="post-card-body">
+                        <div class="post-card-header" style="padding: 0; border: none; margin-bottom: var(--space-lg);">
+                            <span class="post-category android">
+                                <i class="fa-brands fa-android"></i> Android
+                            </span>
+                            <span class="post-date">2024년 12월 1일</span>
+                        </div>
+                        <h2 class="post-title">
+                            <a href="/posts/android/jetpack-compose-clean-architecture/">
+                                Jetpack Compose + Clean Architecture: 대규모 앱을 위한 아키텍처 설계
+                            </a>
+                        </h2>
+                        <p class="post-excerpt">
+                            실제 프로덕션 앱에서 Jetpack Compose와 Clean Architecture를 결합하여 
+                            유지보수성과 테스트 용이성을 극대화한 아키텍처 설계 방법을 공유합니다. 
+                            Multi-module 구조, DI 전략, State Management까지 깊이 있게 다룹니다.
+                        </p>
+                        <div class="post-tags">
+                            <span class="post-tag">#Jetpack Compose</span>
+                            <span class="post-tag">#Clean Architecture</span>
+                            <span class="post-tag">#Hilt</span>
+                            <span class="post-tag">#Multi-module</span>
+                        </div>
+                        <div class="post-card-footer" style="padding: var(--space-lg) 0 0 0; border: none;">
+                            <a href="/posts/android/jetpack-compose-clean-architecture/" class="read-more">
+                                Read Article
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                            <span class="read-time">15 min read</span>
+                        </div>
+                    </div>
+                    <div class="featured-image">
+                        <i class="fa-brands fa-android" style="font-size: 6rem; color: var(--accent-android); opacity: 0.3;"></i>
+                    </div>
+                </article>
+                
+                <!-- Android Posts -->
+                <article class="post-card" data-category="android">
+                    <div class="post-card-header">
+                        <span class="post-category android">
+                            <i class="fa-brands fa-android"></i> Android
+                        </span>
+                        <span class="post-date">2024년 11월 25일</span>
+                    </div>
+                    <div class="post-card-body">
+                        <h3 class="post-title">
+                            <a href="/posts/android/kotlin-coroutines-flow-deep-dive/">
+                                Kotlin Coroutines & Flow 심층 분석: 실전 비동기 처리 패턴
+                            </a>
+                        </h3>
+                        <p class="post-excerpt">
+                            Coroutines의 내부 동작 원리부터 Flow를 활용한 반응형 스트림 처리, 
+                            에러 핸들링 전략까지 실전에서 필요한 모든 것을 다룹니다.
+                        </p>
+                        <div class="post-tags">
+                            <span class="post-tag">#Coroutines</span>
+                            <span class="post-tag">#Flow</span>
+                            <span class="post-tag">#StateFlow</span>
+                        </div>
+                    </div>
+                    <div class="post-card-footer">
+                        <a href="/posts/android/kotlin-coroutines-flow-deep-dive/" class="read-more">
+                            Read Article
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <span class="read-time">12 min read</span>
+                    </div>
+                </article>
+                
+                <article class="post-card" data-category="android">
+                    <div class="post-card-header">
+                        <span class="post-category android">
+                            <i class="fa-brands fa-android"></i> Android
+                        </span>
+                        <span class="post-date">2024년 11월 18일</span>
+                    </div>
+                    <div class="post-card-body">
+                        <h3 class="post-title">
+                            <a href="/posts/android/android-performance-optimization/">
+                                Android 성능 최적화: 메모리 누수부터 UI 렌더링까지
+                            </a>
+                        </h3>
+                        <p class="post-excerpt">
+                            LeakCanary, Android Profiler를 활용한 메모리 분석부터 
+                            Compose 리컴포지션 최적화, 앱 시작 시간 개선까지 성능 튜닝의 모든 것.
+                        </p>
+                        <div class="post-tags">
+                            <span class="post-tag">#Performance</span>
+                            <span class="post-tag">#Memory</span>
+                            <span class="post-tag">#Profiling</span>
+                        </div>
+                    </div>
+                    <div class="post-card-footer">
+                        <a href="/posts/android/android-performance-optimization/" class="read-more">
+                            Read Article
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <span class="read-time">10 min read</span>
+                    </div>
+                </article>
+                
+                <!-- iOS Posts -->
+                <article class="post-card" data-category="ios">
+                    <div class="post-card-header">
+                        <span class="post-category ios">
+                            <i class="fa-brands fa-apple"></i> iOS
+                        </span>
+                        <span class="post-date">2024년 11월 10일</span>
+                    </div>
+                    <div class="post-card-body">
+                        <h3 class="post-title">
+                            <a href="/posts/ios/swiftui-mvvm-combine/">
+                                SwiftUI + MVVM + Combine: iOS 앱 아키텍처 완전 정복
+                            </a>
+                        </h3>
+                        <p class="post-excerpt">
+                            SwiftUI의 선언적 UI와 Combine의 반응형 프로그래밍을 MVVM 패턴으로 
+                            통합하는 방법. Property Wrapper 활용부터 테스트 전략까지.
+                        </p>
+                        <div class="post-tags">
+                            <span class="post-tag">#SwiftUI</span>
+                            <span class="post-tag">#Combine</span>
+                            <span class="post-tag">#MVVM</span>
+                        </div>
+                    </div>
+                    <div class="post-card-footer">
+                        <a href="/posts/ios/swiftui-mvvm-combine/" class="read-more">
+                            Read Article
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <span class="read-time">14 min read</span>
+                    </div>
+                </article>
+                
+                <article class="post-card" data-category="ios">
+                    <div class="post-card-header">
+                        <span class="post-category ios">
+                            <i class="fa-brands fa-apple"></i> iOS
+                        </span>
+                        <span class="post-date">2024년 11월 5일</span>
+                    </div>
+                    <div class="post-card-body">
+                        <h3 class="post-title">
+                            <a href="/posts/ios/swift-concurrency-async-await/">
+                                Swift Concurrency: async/await와 Actor로 안전한 동시성 구현하기
+                            </a>
+                        </h3>
+                        <p class="post-excerpt">
+                            Swift 5.5에서 도입된 structured concurrency의 모든 것. 
+                            기존 GCD/Operation과의 비교, Actor를 활용한 data race 방지 전략.
+                        </p>
+                        <div class="post-tags">
+                            <span class="post-tag">#Swift</span>
+                            <span class="post-tag">#async/await</span>
+                            <span class="post-tag">#Actor</span>
+                        </div>
+                    </div>
+                    <div class="post-card-footer">
+                        <a href="/posts/ios/swift-concurrency-async-await/" class="read-more">
+                            Read Article
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <span class="read-time">11 min read</span>
+                    </div>
+                </article>
+                
+                <!-- Server Posts -->
+                <article class="post-card" data-category="server">
+                    <div class="post-card-header">
+                        <span class="post-category server">
+                            <i class="fa fa-server"></i> Backend
+                        </span>
+                        <span class="post-date">2024년 10월 28일</span>
+                    </div>
+                    <div class="post-card-body">
+                        <h3 class="post-title">
+                            <a href="/posts/server/spring-boot-kotlin-rest-api/">
+                                Spring Boot + Kotlin으로 RESTful API 구축하기
+                            </a>
+                        </h3>
+                        <p class="post-excerpt">
+                            Kotlin의 장점을 살린 Spring Boot 프로젝트 설정부터 
+                            JWT 인증, JPA, 테스트 코드 작성까지 실전 API 개발 가이드.
+                        </p>
+                        <div class="post-tags">
+                            <span class="post-tag">#Spring Boot</span>
+                            <span class="post-tag">#Kotlin</span>
+                            <span class="post-tag">#REST API</span>
+                        </div>
+                    </div>
+                    <div class="post-card-footer">
+                        <a href="/posts/server/spring-boot-kotlin-rest-api/" class="read-more">
+                            Read Article
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <span class="read-time">18 min read</span>
+                    </div>
+                </article>
+                
+                <article class="post-card" data-category="server">
+                    <div class="post-card-header">
+                        <span class="post-category server">
+                            <i class="fa fa-server"></i> Backend
+                        </span>
+                        <span class="post-date">2024년 10월 15일</span>
+                    </div>
+                    <div class="post-card-body">
+                        <h3 class="post-title">
+                            <a href="/posts/server/docker-kubernetes-mobile-backend/">
+                                Docker & Kubernetes: 모바일 백엔드 인프라 구축
+                            </a>
+                        </h3>
+                        <p class="post-excerpt">
+                            컨테이너 기반 마이크로서비스 아키텍처 설계, CI/CD 파이프라인 구성, 
+                            무중단 배포 전략까지 DevOps 실전 가이드.
+                        </p>
+                        <div class="post-tags">
+                            <span class="post-tag">#Docker</span>
+                            <span class="post-tag">#Kubernetes</span>
+                            <span class="post-tag">#CI/CD</span>
+                        </div>
+                    </div>
+                    <div class="post-card-footer">
+                        <a href="/posts/server/docker-kubernetes-mobile-backend/" class="read-more">
+                            Read Article
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <span class="read-time">16 min read</span>
+                    </div>
+                </article>
+                
+                <!-- Web Frontend Posts -->
+                <article class="post-card" data-category="web">
+                    <div class="post-card-header">
+                        <span class="post-category web">
+                            <i class="fa-brands fa-react"></i> Frontend
+                        </span>
+                        <span class="post-date">2024년 10월 5일</span>
+                    </div>
+                    <div class="post-card-body">
+                        <h3 class="post-title">
+                            <a href="/posts/web/react-typescript-best-practices/">
+                                React + TypeScript 베스트 프랙티스 2024
+                            </a>
+                        </h3>
+                        <p class="post-excerpt">
+                            타입 안전한 React 컴포넌트 설계, Custom Hooks 패턴, 
+                            상태 관리 전략(Zustand, React Query), 성능 최적화 기법.
+                        </p>
+                        <div class="post-tags">
+                            <span class="post-tag">#React</span>
+                            <span class="post-tag">#TypeScript</span>
+                            <span class="post-tag">#Hooks</span>
+                        </div>
+                    </div>
+                    <div class="post-card-footer">
+                        <a href="/posts/web/react-typescript-best-practices/" class="read-more">
+                            Read Article
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <span class="read-time">13 min read</span>
+                    </div>
+                </article>
+                
+                <article class="post-card" data-category="web">
+                    <div class="post-card-header">
+                        <span class="post-category web">
+                            <i class="fa-brands fa-react"></i> Frontend
+                        </span>
+                        <span class="post-date">2024년 9월 20일</span>
+                    </div>
+                    <div class="post-card-body">
+                        <h3 class="post-title">
+                            <a href="/posts/web/nextjs-app-router-full-stack/">
+                                Next.js 14 App Router로 풀스택 웹 애플리케이션 만들기
+                            </a>
+                        </h3>
+                        <p class="post-excerpt">
+                            Server Components, Server Actions를 활용한 현대적인 웹 앱 개발. 
+                            인증, DB 연동, 배포까지 실전 프로젝트 구축 과정.
+                        </p>
+                        <div class="post-tags">
+                            <span class="post-tag">#Next.js</span>
+                            <span class="post-tag">#App Router</span>
+                            <span class="post-tag">#Full Stack</span>
+                        </div>
+                    </div>
+                    <div class="post-card-footer">
+                        <a href="/posts/web/nextjs-app-router-full-stack/" class="read-more">
+                            Read Article
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <span class="read-time">20 min read</span>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    
+    <!-- About Section -->
+    <section class="section about-section" id="about">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-image">
+                    <img src="/assets/images/profile.jpg" alt="Chansaem Lee" class="about-avatar">
+                    <div class="social-links">
+                        <a href="https://github.com/inyion" class="social-link" target="_blank" rel="noopener" aria-label="GitHub">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                        <a href="https://linkedin.com" class="social-link" target="_blank" rel="noopener" aria-label="LinkedIn">
+                            <i class="fa-brands fa-linkedin-in"></i>
+                        </a>
+                        <a href="mailto:contact@example.com" class="social-link" aria-label="Email">
+                            <i class="fa fa-envelope"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="about-content">
+                    <h2>About Me</h2>
+                    <p>
+                        안녕하세요, <strong>14년차 시니어 Android 개발자</strong> 이찬샘입니다. 
+                        웹 개발자로 커리어를 시작했고, 스타트업에서 사람이 없어 백엔드와 Android를 1년 반 정도 
+                        동시에 개발하며 다양한 경험을 쌓았습니다.
+                    </p>
+                    <p>
+                        이후 Android 개발자로 이직하여 <strong>12년 이상</strong> Android 개발에 집중해왔습니다. 
+                        대규모 서비스의 아키텍처 설계, 성능 최적화, 팀 리딩 등 시니어 개발자로서 
+                        다양한 역할을 수행하고 있습니다. 초기 풀스택 경험 덕분에 백엔드와 웹에 대한 이해도가 높습니다.
+                    </p>
+                    
+                    <div class="skills-section">
+                        <h4>Tech Stack</h4>
+                        <div class="skills-grid">
+                            <div class="skill-category">
+                                <h5><i class="fa-brands fa-android" style="color: var(--accent-android);"></i> Android</h5>
+                                <div class="skill-list">
+                                    <span class="skill-item">Kotlin</span>
+                                    <span class="skill-item">Jetpack Compose</span>
+                                    <span class="skill-item">Coroutines</span>
+                                    <span class="skill-item">Hilt</span>
+                                    <span class="skill-item">Room</span>
+                                    <span class="skill-item">Retrofit</span>
+                                </div>
+                            </div>
+                            <div class="skill-category">
+                                <h5><i class="fa-brands fa-apple" style="color: var(--accent-ios);"></i> iOS</h5>
+                                <div class="skill-list">
+                                    <span class="skill-item">Swift</span>
+                                    <span class="skill-item">SwiftUI</span>
+                                    <span class="skill-item">Combine</span>
+                                    <span class="skill-item">UIKit</span>
+                                    <span class="skill-item">Core Data</span>
+                                </div>
+                            </div>
+                            <div class="skill-category">
+                                <h5><i class="fa fa-server" style="color: var(--accent-server);"></i> Backend</h5>
+                                <div class="skill-list">
+                                    <span class="skill-item">Spring Boot</span>
+                                    <span class="skill-item">Node.js</span>
+                                    <span class="skill-item">PostgreSQL</span>
+                                    <span class="skill-item">Redis</span>
+                                    <span class="skill-item">Docker</span>
+                                    <span class="skill-item">AWS</span>
+                                </div>
+                            </div>
+                            <div class="skill-category">
+                                <h5><i class="fa-brands fa-react" style="color: var(--accent-web);"></i> Frontend</h5>
+                                <div class="skill-list">
+                                    <span class="skill-item">React</span>
+                                    <span class="skill-item">Next.js</span>
+                                    <span class="skill-item">TypeScript</span>
+                                    <span class="skill-item">Tailwind CSS</span>
+                                    <span class="skill-item">Vue.js</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">
+                    © 2024 Chansaem Lee. Built with ❤️
+                </p>
+                <div class="footer-links">
+                    <a href="/categories/" class="footer-link">Categories</a>
+                    <a href="/archives/" class="footer-link">Archives</a>
+                    <a href="https://github.com/inyion" class="footer-link" target="_blank" rel="noopener">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script>
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
         
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+            const icon = mobileMenuBtn.querySelector('i');
+            icon.classList.toggle('fa-bars');
+            icon.classList.toggle('fa-times');
+        });
         
-    </div>
-</div>
-
+        // Category Filtering
+        const categoryTabs = document.querySelectorAll('.category-tab');
+        const postCards = document.querySelectorAll('.post-card');
         
+        categoryTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update active tab
+                categoryTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const category = tab.dataset.category;
+                
+                // Filter posts
+                postCards.forEach((card, index) => {
+                    const cardCategory = card.dataset.category;
+                    
+                    if (category === 'all' || cardCategory === category) {
+                        card.style.display = 'grid';
+                        card.style.animation = `fadeInUp 0.5s ease-out ${index * 0.1}s both`;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
         
-<div id="cover" style="background-image:url('/assets/images/cover3.jpg');"></div>
-        <!--SCRIPTS-->
-<script src="/assets/js/script-peofhqjkzcghmndknakluequy1y6owxdwpaqyju9ntl9zxnk7rdolb3rjjoj.min.js"></script>
-<!--SCRIPTS END-->
-
-
-
-    </body>
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+                // Close mobile menu if open
+                navMenu.classList.remove('active');
+            });
+        });
+        
+        // Header scroll effect
+        const header = document.querySelector('.site-header');
+        let lastScroll = 0;
+        
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > 100) {
+                header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+            } else {
+                header.style.boxShadow = 'none';
+            }
+            
+            lastScroll = currentScroll;
+        });
+    </script>
+</body>
 </html>

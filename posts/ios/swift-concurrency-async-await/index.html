@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swift Concurrency: async/await와 Actor로 안전한 동시성 구현하기 | ChanDev</title>
+    <meta name="description" content="Swift 5.5에서 도입된 structured concurrency의 모든 것. Actor를 활용한 data race 방지 전략">
+    <meta name="author" content="Chansaem Lee">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/modern.css">
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ChanDev</span>
+                </a>
+                <nav>
+                    <ul class="nav-menu" id="navMenu">
+                        <li><a href="/" class="nav-link">Home</a></li>
+                        <li><a href="/categories/" class="nav-link">Categories</a></li>
+                        <li><a href="/archives/" class="nav-link">Archives</a></li>
+                        <li><a href="/#about" class="nav-link">About</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="post-page">
+        <article>
+            <div class="post-header">
+                <div class="container">
+                    <span class="post-category ios">
+                        <i class="fa-brands fa-apple"></i> iOS
+                    </span>
+                    <h1 class="post-title">Swift Concurrency: async/await와 Actor로 안전한 동시성 구현하기</h1>
+                    <div class="post-meta">
+                        <span class="post-meta-item">
+                            <i class="fa fa-calendar"></i>
+                            2024년 11월 5일
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-clock"></i>
+                            11 min read
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-user"></i>
+                            Chansaem Lee
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                <div class="container container-narrow">
+                    <div class="post-body">
+                        <p>
+                            Swift 5.5에서 도입된 <strong>async/await</strong>는 비동기 프로그래밍의 패러다임을 완전히 바꿨습니다. 
+                            기존의 콜백 지옥에서 벗어나 깔끔하고 안전한 동시성 코드를 작성할 수 있게 되었습니다.
+                        </p>
+                        
+                        <h2>기존 방식 vs async/await</h2>
+                        
+                        <pre><code class="language-swift">// ❌ 기존 콜백 방식
+func fetchUserData(completion: @escaping (Result&lt;User, Error&gt;) -> Void) {
+    fetchUser { userResult in
+        switch userResult {
+        case .success(let user):
+            fetchProfile(userId: user.id) { profileResult in
+                switch profileResult {
+                case .success(let profile):
+                    fetchPosts(userId: user.id) { postsResult in
+                        // 콜백 지옥...
+                    }
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+        case .failure(let error):
+            completion(.failure(error))
+        }
+    }
+}
+
+// ✅ async/await 방식
+func fetchUserData() async throws -> UserData {
+    let user = try await fetchUser()
+    let profile = try await fetchProfile(userId: user.id)
+    let posts = try await fetchPosts(userId: user.id)
+    return UserData(user: user, profile: profile, posts: posts)
+}</code></pre>
+                        
+                        <h2>async/await 기본</h2>
+                        
+                        <pre><code class="language-swift">// async 함수 정의
+func fetchUser(id: UUID) async throws -> User {
+    let url = URL(string: "https://api.example.com/users/\(id)")!
+    let (data, response) = try await URLSession.shared.data(from: url)
+    
+    guard let httpResponse = response as? HTTPURLResponse,
+          httpResponse.statusCode == 200 else {
+        throw APIError.invalidResponse
+    }
+    
+    return try JSONDecoder().decode(User.self, from: data)
+}
+
+// async 함수 호출
+func loadUser() {
+    Task {
+        do {
+            let user = try await fetchUser(id: userId)
+            // UI 업데이트는 MainActor에서
+            await MainActor.run {
+                self.user = user
+            }
+        } catch {
+            print("Error: \(error)")
+        }
+    }
+}</code></pre>
+                        
+                        <h2>Task와 Structured Concurrency</h2>
+                        
+                        <pre><code class="language-swift">// Task 생성
+let task = Task {
+    try await fetchData()
+}
+
+// Task 취소
+task.cancel()
+
+// Task 결과 대기
+let result = await task.value
+
+// Task Group: 병렬 처리
+func fetchAllUsers(ids: [UUID]) async throws -> [User] {
+    try await withThrowingTaskGroup(of: User.self) { group in
+        for id in ids {
+            group.addTask {
+                try await self.fetchUser(id: id)
+            }
+        }
+        
+        var users: [User] = []
+        for try await user in group {
+            users.append(user)
+        }
+        return users
+    }
+}
+
+// async let: 동시 실행
+func loadDashboard() async throws -> Dashboard {
+    async let user = fetchUser()
+    async let stats = fetchStats()
+    async let notifications = fetchNotifications()
+    
+    // 모든 작업이 완료될 때까지 대기
+    return try await Dashboard(
+        user: user,
+        stats: stats,
+        notifications: notifications
+    )
+}</code></pre>
+                        
+                        <h2>Actor: Data Race 방지</h2>
+                        
+                        <p>
+                            Actor는 상태를 보호하는 동시성 안전 타입입니다. 
+                            Actor 내부의 상태는 한 번에 하나의 작업만 접근할 수 있습니다.
+                        </p>
+                        
+                        <pre><code class="language-swift">// Actor 정의
+actor UserCache {
+    private var cache: [UUID: User] = [:]
+    
+    func user(for id: UUID) -> User? {
+        cache[id]
+    }
+    
+    func setUser(_ user: User) {
+        cache[user.id] = user
+    }
+    
+    func clear() {
+        cache.removeAll()
+    }
+}
+
+// Actor 사용
+let cache = UserCache()
+
+// Actor의 메서드 호출은 await 필요
+Task {
+    await cache.setUser(user)
+    if let cached = await cache.user(for: userId) {
+        print(cached)
+    }
+}
+
+// nonisolated: Actor isolation 없이 접근
+actor Database {
+    nonisolated let configuration: Configuration  // 불변 값
+    
+    nonisolated func schema() -> String {
+        // Actor 상태에 접근하지 않는 메서드
+        return "v1.0"
+    }
+}</code></pre>
+                        
+                        <h2>MainActor</h2>
+                        
+                        <pre><code class="language-swift">// MainActor: UI 업데이트용 Actor
+@MainActor
+final class UserViewModel: ObservableObject {
+    @Published var user: User?
+    @Published var isLoading = false
+    @Published var error: Error?
+    
+    // 이 메서드는 자동으로 Main Thread에서 실행
+    func loadUser() async {
+        isLoading = true
+        defer { isLoading = false }
+        
+        do {
+            user = try await userRepository.fetchUser()
+        } catch {
+            self.error = error
+        }
+    }
+}
+
+// 특정 함수만 MainActor에서 실행
+class DataManager {
+    @MainActor
+    func updateUI() {
+        // Main Thread에서 실행 보장
+    }
+    
+    func processData() async {
+        let processed = await heavyProcessing()
+        
+        // MainActor로 전환
+        await MainActor.run {
+            updateUI()
+        }
+    }
+}</code></pre>
+                        
+                        <h2>Continuation: 콜백 → async 변환</h2>
+                        
+                        <pre><code class="language-swift">// 기존 콜백 API를 async로 래핑
+func fetchImage(url: URL) async throws -> UIImage {
+    try await withCheckedThrowingContinuation { continuation in
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                continuation.resume(throwing: error)
+                return
+            }
+            
+            guard let data = data,
+                  let image = UIImage(data: data) else {
+                continuation.resume(throwing: ImageError.invalidData)
+                return
+            }
+            
+            continuation.resume(returning: image)
+        }.resume()
+    }
+}
+
+// Delegate 패턴 래핑
+class LocationManager {
+    func requestLocation() async throws -> CLLocation {
+        try await withCheckedThrowingContinuation { continuation in
+            self.locationContinuation = continuation
+            manager.requestLocation()
+        }
+    }
+    
+    // Delegate에서 continuation resume
+    func locationManager(_ manager: CLLocationManager, 
+                         didUpdateLocations locations: [CLLocation]) {
+        locationContinuation?.resume(returning: locations[0])
+        locationContinuation = nil
+    }
+}</code></pre>
+                        
+                        <h2>AsyncSequence</h2>
+                        
+                        <pre><code class="language-swift">// AsyncSequence 사용
+func loadImages(urls: [URL]) async throws {
+    for try await image in urls.async.map({ try await fetchImage(url: $0) }) {
+        images.append(image)
+    }
+}
+
+// AsyncStream: 커스텀 AsyncSequence
+func notifications() -> AsyncStream&lt;Notification&gt; {
+    AsyncStream { continuation in
+        let observer = NotificationCenter.default.addObserver(
+            forName: .userDidUpdate,
+            object: nil,
+            queue: .main
+        ) { notification in
+            continuation.yield(notification)
+        }
+        
+        continuation.onTermination = { _ in
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+}
+
+// 사용
+Task {
+    for await notification in notifications() {
+        handleNotification(notification)
+    }
+}</code></pre>
+                        
+                        <h2>에러 핸들링</h2>
+                        
+                        <pre><code class="language-swift">// Task의 에러 처리
+func loadData() {
+    Task {
+        do {
+            let data = try await fetchData()
+            process(data)
+        } catch is CancellationError {
+            // Task가 취소됨
+            print("Task was cancelled")
+        } catch {
+            // 다른 에러
+            showError(error)
+        }
+    }
+}
+
+// Result와 함께 사용
+func safeLoad() async -> Result&lt;Data, Error&gt; {
+    do {
+        let data = try await fetchData()
+        return .success(data)
+    } catch {
+        return .failure(error)
+    }
+}
+
+// Task 취소 확인
+func processItems(_ items: [Item]) async throws {
+    for item in items {
+        // 취소 확인
+        try Task.checkCancellation()
+        
+        // 또는 취소 시 안전하게 종료
+        guard !Task.isCancelled else { return }
+        
+        await process(item)
+    }
+}</code></pre>
+                        
+                        <h2>SwiftUI와 함께 사용</h2>
+                        
+                        <pre><code class="language-swift">struct UserView: View {
+    @StateObject private var viewModel = UserViewModel()
+    
+    var body: some View {
+        List(viewModel.users) { user in
+            UserRow(user: user)
+        }
+        .task {
+            // View가 나타날 때 자동 실행, 사라질 때 자동 취소
+            await viewModel.loadUsers()
+        }
+        .task(id: viewModel.searchText) {
+            // searchText가 바뀔 때마다 이전 task 취소 후 새로 실행
+            await viewModel.search()
+        }
+        .refreshable {
+            await viewModel.refresh()
+        }
+    }
+}
+
+// @MainActor ViewModel
+@MainActor
+final class UserViewModel: ObservableObject {
+    @Published var users: [User] = []
+    @Published var searchText = ""
+    
+    func loadUsers() async {
+        users = try? await userRepository.fetchUsers() ?? []
+    }
+    
+    func search() async {
+        guard !searchText.isEmpty else {
+            users = []
+            return
+        }
+        
+        // debounce 효과
+        try? await Task.sleep(for: .milliseconds(300))
+        guard !Task.isCancelled else { return }
+        
+        users = try? await userRepository.search(query: searchText) ?? []
+    }
+}</code></pre>
+                        
+                        <h2>마무리</h2>
+                        
+                        <p>
+                            Swift Concurrency는 안전하고 효율적인 비동기 코드 작성을 가능하게 합니다. 
+                            async/await로 가독성을 높이고, Actor로 데이터 레이스를 방지하며, 
+                            Structured Concurrency로 리소스 관리를 자동화할 수 있습니다.
+                        </p>
+                        
+                        <div class="post-tags" style="margin-top: var(--space-2xl);">
+                            <span class="post-tag">#Swift</span>
+                            <span class="post-tag">#async/await</span>
+                            <span class="post-tag">#Actor</span>
+                            <span class="post-tag">#Concurrency</span>
+                            <span class="post-tag">#iOS</span>
+                        </div>
+                        
+                        <div class="post-navigation">
+                            <a href="/posts/ios/swiftui-mvvm-combine/" class="post-nav-item">
+                                <span class="post-nav-label">← Previous Article</span>
+                                <span class="post-nav-title">SwiftUI + MVVM + Combine</span>
+                            </a>
+                            <a href="/posts/server/spring-boot-kotlin-rest-api/" class="post-nav-item">
+                                <span class="post-nav-label">Next Article →</span>
+                                <span class="post-nav-title">Spring Boot + Kotlin REST API</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">© 2024 Chansaem Lee. Built with ❤️</p>
+                <div class="footer-links">
+                    <a href="/categories/" class="footer-link">Categories</a>
+                    <a href="/archives/" class="footer-link">Archives</a>
+                    <a href="https://github.com/inyion" class="footer-link" target="_blank">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
+

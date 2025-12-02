@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React + TypeScript 베스트 프랙티스 2024 | ChanDev</title>
+    <meta name="description" content="타입 안전한 React 컴포넌트 설계, Custom Hooks 패턴, 상태 관리 전략">
+    <meta name="author" content="Chansaem Lee">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/modern.css">
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ChanDev</span>
+                </a>
+                <nav>
+                    <ul class="nav-menu" id="navMenu">
+                        <li><a href="/" class="nav-link">Home</a></li>
+                        <li><a href="/categories/" class="nav-link">Categories</a></li>
+                        <li><a href="/archives/" class="nav-link">Archives</a></li>
+                        <li><a href="/#about" class="nav-link">About</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="post-page">
+        <article>
+            <div class="post-header">
+                <div class="container">
+                    <span class="post-category web">
+                        <i class="fa-brands fa-react"></i> Frontend
+                    </span>
+                    <h1 class="post-title">React + TypeScript 베스트 프랙티스 2024</h1>
+                    <div class="post-meta">
+                        <span class="post-meta-item">
+                            <i class="fa fa-calendar"></i>
+                            2024년 10월 5일
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-clock"></i>
+                            13 min read
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-user"></i>
+                            Chansaem Lee
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                <div class="container container-narrow">
+                    <div class="post-body">
+                        <p>
+                            모바일 개발자도 어드민 패널이나 웹 대시보드를 만들어야 할 때가 있습니다. 
+                            이 글에서는 React와 TypeScript를 함께 사용하는 <strong>현대적인 패턴</strong>을 정리합니다.
+                        </p>
+                        
+                        <h2>컴포넌트 타입 정의</h2>
+                        
+                        <pre><code class="language-typescript">// 기본 컴포넌트 Props
+interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  isLoading?: boolean;
+  disabled?: boolean;
+  children: React.ReactNode;
+  onClick?: () => void;
+}
+
+// React.FC 대신 함수 선언 권장
+function Button({ 
+  variant = 'primary', 
+  size = 'md',
+  isLoading = false,
+  disabled,
+  children,
+  onClick 
+}: ButtonProps) {
+  return (
+    &lt;button
+      className={`btn btn-${variant} btn-${size}`}
+      disabled={disabled || isLoading}
+      onClick={onClick}
+    &gt;
+      {isLoading ? &lt;Spinner /&gt; : children}
+    &lt;/button&gt;
+  );
+}
+
+// HTML 속성 확장
+interface InputProps extends React.InputHTMLAttributes&lt;HTMLInputElement&gt; {
+  label: string;
+  error?: string;
+}
+
+function Input({ label, error, className, ...props }: InputProps) {
+  return (
+    &lt;div className="input-group"&gt;
+      &lt;label&gt;{label}&lt;/label&gt;
+      &lt;input 
+        className={`input ${error ? 'input-error' : ''} ${className}`}
+        {...props} 
+      /&gt;
+      {error && &lt;span className="error"&gt;{error}&lt;/span&gt;}
+    &lt;/div&gt;
+  );
+}</code></pre>
+                        
+                        <h2>제네릭 컴포넌트</h2>
+                        
+                        <pre><code class="language-typescript">// 제네릭 Select 컴포넌트
+interface SelectOption&lt;T&gt; {
+  value: T;
+  label: string;
+}
+
+interface SelectProps&lt;T&gt; {
+  options: SelectOption&lt;T&gt;[];
+  value: T;
+  onChange: (value: T) => void;
+  placeholder?: string;
+}
+
+function Select&lt;T extends string | number&gt;({ 
+  options, 
+  value, 
+  onChange,
+  placeholder 
+}: SelectProps&lt;T&gt;) {
+  return (
+    &lt;select 
+      value={value} 
+      onChange={(e) => onChange(e.target.value as T)}
+    &gt;
+      {placeholder && &lt;option value=""&gt;{placeholder}&lt;/option&gt;}
+      {options.map((option) => (
+        &lt;option key={String(option.value)} value={option.value}&gt;
+          {option.label}
+        &lt;/option&gt;
+      ))}
+    &lt;/select&gt;
+  );
+}
+
+// 사용
+&lt;Select&lt;'active' | 'inactive'&gt;
+  options={[
+    { value: 'active', label: '활성' },
+    { value: 'inactive', label: '비활성' }
+  ]}
+  value={status}
+  onChange={setStatus}
+/&gt;
+
+// 제네릭 리스트 컴포넌트
+interface ListProps&lt;T&gt; {
+  items: T[];
+  renderItem: (item: T, index: number) => React.ReactNode;
+  keyExtractor: (item: T) => string;
+  emptyMessage?: string;
+}
+
+function List&lt;T&gt;({ items, renderItem, keyExtractor, emptyMessage }: ListProps&lt;T&gt;) {
+  if (items.length === 0) {
+    return &lt;div className="empty"&gt;{emptyMessage || '데이터가 없습니다'}&lt;/div&gt;;
+  }
+  
+  return (
+    &lt;ul&gt;
+      {items.map((item, index) => (
+        &lt;li key={keyExtractor(item)}&gt;{renderItem(item, index)}&lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  );
+}</code></pre>
+                        
+                        <h2>Custom Hooks</h2>
+                        
+                        <pre><code class="language-typescript">// useAsync: 비동기 작업 관리
+interface UseAsyncState&lt;T&gt; {
+  data: T | null;
+  error: Error | null;
+  isLoading: boolean;
+}
+
+function useAsync&lt;T&gt;(
+  asyncFn: () => Promise&lt;T&gt;,
+  deps: React.DependencyList = []
+) {
+  const [state, setState] = useState&lt;UseAsyncState&lt;T&gt;&gt;({
+    data: null,
+    error: null,
+    isLoading: true,
+  });
+
+  const execute = useCallback(async () => {
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    try {
+      const data = await asyncFn();
+      setState({ data, error: null, isLoading: false });
+    } catch (error) {
+      setState({ data: null, error: error as Error, isLoading: false });
+    }
+  }, deps);
+
+  useEffect(() => {
+    execute();
+  }, [execute]);
+
+  return { ...state, refetch: execute };
+}
+
+// 사용
+function UserProfile({ userId }: { userId: string }) {
+  const { data: user, isLoading, error, refetch } = useAsync(
+    () => fetchUser(userId),
+    [userId]
+  );
+
+  if (isLoading) return &lt;Spinner /&gt;;
+  if (error) return &lt;ErrorMessage error={error} onRetry={refetch} /&gt;;
+  if (!user) return null;
+
+  return &lt;div&gt;{user.name}&lt;/div&gt;;
+}
+
+// useLocalStorage
+function useLocalStorage&lt;T&gt;(key: string, initialValue: T) {
+  const [storedValue, setStoredValue] = useState&lt;T&gt;(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch {
+      return initialValue;
+    }
+  });
+
+  const setValue = useCallback((value: T | ((val: T) => T)) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.error(error);
+    }
+  }, [key, storedValue]);
+
+  return [storedValue, setValue] as const;
+}
+
+// useDebounce
+function useDebounce&lt;T&gt;(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+// 사용: 검색
+function SearchInput() {
+  const [query, setQuery] = useState('');
+  const debouncedQuery = useDebounce(query, 300);
+  
+  const { data: results } = useAsync(
+    () => searchAPI(debouncedQuery),
+    [debouncedQuery]
+  );
+  // ...
+}</code></pre>
+                        
+                        <h2>상태 관리 (Zustand)</h2>
+                        
+                        <pre><code class="language-typescript">// stores/userStore.ts
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface UserState {
+  user: User | null;
+  isAuthenticated: boolean;
+  setUser: (user: User | null) => void;
+  logout: () => void;
+}
+
+export const useUserStore = create&lt;UserState&gt;()(
+  persist(
+    (set) => ({
+      user: null,
+      isAuthenticated: false,
+      setUser: (user) => set({ user, isAuthenticated: !!user }),
+      logout: () => set({ user: null, isAuthenticated: false }),
+    }),
+    {
+      name: 'user-storage',
+      partialize: (state) => ({ user: state.user }),
+    }
+  )
+);
+
+// stores/cartStore.ts
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface CartState {
+  items: CartItem[];
+  addItem: (item: Omit&lt;CartItem, 'quantity'&gt;) => void;
+  removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
+  clearCart: () => void;
+  total: number;
+}
+
+export const useCartStore = create&lt;CartState&gt;((set, get) => ({
+  items: [],
+  
+  addItem: (item) => set((state) => {
+    const existing = state.items.find((i) => i.id === item.id);
+    if (existing) {
+      return {
+        items: state.items.map((i) =>
+          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+        ),
+      };
+    }
+    return { items: [...state.items, { ...item, quantity: 1 }] };
+  }),
+  
+  removeItem: (id) => set((state) => ({
+    items: state.items.filter((i) => i.id !== id),
+  })),
+  
+  updateQuantity: (id, quantity) => set((state) => ({
+    items: state.items.map((i) =>
+      i.id === id ? { ...i, quantity } : i
+    ),
+  })),
+  
+  clearCart: () => set({ items: [] }),
+  
+  get total() {
+    return get().items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  },
+}));</code></pre>
+                        
+                        <h2>React Query (TanStack Query)</h2>
+                        
+                        <pre><code class="language-typescript">// hooks/useUsers.ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+// Query Keys
+export const userKeys = {
+  all: ['users'] as const,
+  lists: () => [...userKeys.all, 'list'] as const,
+  list: (filters: UserFilters) => [...userKeys.lists(), filters] as const,
+  details: () => [...userKeys.all, 'detail'] as const,
+  detail: (id: string) => [...userKeys.details(), id] as const,
+};
+
+// Hooks
+export function useUsers(filters: UserFilters) {
+  return useQuery({
+    queryKey: userKeys.list(filters),
+    queryFn: () => api.getUsers(filters),
+    staleTime: 5 * 60 * 1000, // 5분
+  });
+}
+
+export function useUser(id: string) {
+  return useQuery({
+    queryKey: userKeys.detail(id),
+    queryFn: () => api.getUser(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: api.createUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+    },
+  });
+}
+
+export function useUpdateUser() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateUserData }) =>
+      api.updateUser(id, data),
+    onSuccess: (data, { id }) => {
+      queryClient.setQueryData(userKeys.detail(id), data);
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+    },
+  });
+}
+
+// 컴포넌트에서 사용
+function UserList() {
+  const [filters, setFilters] = useState&lt;UserFilters&gt;({});
+  const { data: users, isLoading, error } = useUsers(filters);
+  const createUser = useCreateUser();
+
+  const handleCreate = async (data: CreateUserData) => {
+    try {
+      await createUser.mutateAsync(data);
+      toast.success('사용자가 생성되었습니다');
+    } catch (error) {
+      toast.error('생성 실패');
+    }
+  };
+
+  // ...
+}</code></pre>
+                        
+                        <h2>폼 처리 (React Hook Form + Zod)</h2>
+                        
+                        <pre><code class="language-typescript">import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+// 스키마 정의
+const userSchema = z.object({
+  name: z.string().min(2, '이름은 2자 이상이어야 합니다'),
+  email: z.string().email('올바른 이메일 형식이 아닙니다'),
+  age: z.number().min(1).max(120).optional(),
+  role: z.enum(['admin', 'user', 'guest']),
+  notifications: z.object({
+    email: z.boolean(),
+    push: z.boolean(),
+  }),
+});
+
+type UserFormData = z.infer&lt;typeof userSchema&gt;;
+
+// 폼 컴포넌트
+function UserForm({ onSubmit, defaultValues }: UserFormProps) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    watch,
+    setValue,
+  } = useForm&lt;UserFormData&gt;({
+    resolver: zodResolver(userSchema),
+    defaultValues,
+  });
+
+  return (
+    &lt;form onSubmit={handleSubmit(onSubmit)}&gt;
+      &lt;div&gt;
+        &lt;label&gt;이름&lt;/label&gt;
+        &lt;input {...register('name')} /&gt;
+        {errors.name && &lt;span&gt;{errors.name.message}&lt;/span&gt;}
+      &lt;/div&gt;
+      
+      &lt;div&gt;
+        &lt;label&gt;이메일&lt;/label&gt;
+        &lt;input type="email" {...register('email')} /&gt;
+        {errors.email && &lt;span&gt;{errors.email.message}&lt;/span&gt;}
+      &lt;/div&gt;
+      
+      &lt;div&gt;
+        &lt;label&gt;역할&lt;/label&gt;
+        &lt;select {...register('role')}&gt;
+          &lt;option value="user"&gt;사용자&lt;/option&gt;
+          &lt;option value="admin"&gt;관리자&lt;/option&gt;
+          &lt;option value="guest"&gt;게스트&lt;/option&gt;
+        &lt;/select&gt;
+      &lt;/div&gt;
+      
+      &lt;div&gt;
+        &lt;label&gt;
+          &lt;input type="checkbox" {...register('notifications.email')} /&gt;
+          이메일 알림
+        &lt;/label&gt;
+        &lt;label&gt;
+          &lt;input type="checkbox" {...register('notifications.push')} /&gt;
+          푸시 알림
+        &lt;/label&gt;
+      &lt;/div&gt;
+      
+      &lt;button type="submit" disabled={isSubmitting}&gt;
+        {isSubmitting ? '처리 중...' : '저장'}
+      &lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+                        
+                        <h2>성능 최적화</h2>
+                        
+                        <pre><code class="language-typescript">// React.memo 활용
+interface UserCardProps {
+  user: User;
+  onEdit: (id: string) => void;
+}
+
+const UserCard = React.memo(function UserCard({ user, onEdit }: UserCardProps) {
+  return (
+    &lt;div className="user-card"&gt;
+      &lt;h3&gt;{user.name}&lt;/h3&gt;
+      &lt;button onClick={() => onEdit(user.id)}&gt;편집&lt;/button&gt;
+    &lt;/div&gt;
+  );
+});
+
+// useCallback & useMemo
+function UserList({ users }: { users: User[] }) {
+  const [filter, setFilter] = useState('');
+  
+  // 필터링 결과 메모이제이션
+  const filteredUsers = useMemo(() => 
+    users.filter(user => 
+      user.name.toLowerCase().includes(filter.toLowerCase())
+    ),
+    [users, filter]
+  );
+  
+  // 콜백 메모이제이션
+  const handleEdit = useCallback((id: string) => {
+    // 편집 로직
+  }, []);
+  
+  return (
+    &lt;&gt;
+      &lt;input value={filter} onChange={e => setFilter(e.target.value)} /&gt;
+      {filteredUsers.map(user => (
+        &lt;UserCard key={user.id} user={user} onEdit={handleEdit} /&gt;
+      ))}
+    &lt;/&gt;
+  );
+}
+
+// 가상화 (react-virtual)
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+function VirtualList({ items }: { items: Item[] }) {
+  const parentRef = useRef&lt;HTMLDivElement&gt;(null);
+  
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 50,
+  });
+  
+  return (
+    &lt;div ref={parentRef} style={{ height: 400, overflow: 'auto' }}&gt;
+      &lt;div style={{ height: virtualizer.getTotalSize() }}&gt;
+        {virtualizer.getVirtualItems().map(virtualItem => (
+          &lt;div
+            key={virtualItem.key}
+            style={{
+              position: 'absolute',
+              top: virtualItem.start,
+              height: virtualItem.size,
+            }}
+          &gt;
+            {items[virtualItem.index].name}
+          &lt;/div&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+                        
+                        <h2>마무리</h2>
+                        
+                        <p>
+                            React + TypeScript는 타입 안정성과 개발자 경험을 모두 잡을 수 있는 조합입니다. 
+                            이 글에서 다룬 패턴들을 활용하면 유지보수 가능한 프론트엔드 코드를 작성할 수 있습니다.
+                        </p>
+                        
+                        <div class="post-tags" style="margin-top: var(--space-2xl);">
+                            <span class="post-tag">#React</span>
+                            <span class="post-tag">#TypeScript</span>
+                            <span class="post-tag">#Hooks</span>
+                            <span class="post-tag">#Zustand</span>
+                            <span class="post-tag">#React Query</span>
+                        </div>
+                        
+                        <div class="post-navigation">
+                            <a href="/posts/server/docker-kubernetes-mobile-backend/" class="post-nav-item">
+                                <span class="post-nav-label">← Previous Article</span>
+                                <span class="post-nav-title">Docker & Kubernetes</span>
+                            </a>
+                            <a href="/posts/web/nextjs-app-router-full-stack/" class="post-nav-item">
+                                <span class="post-nav-label">Next Article →</span>
+                                <span class="post-nav-title">Next.js 14 App Router</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">© 2024 Chansaem Lee. Built with ❤️</p>
+                <div class="footer-links">
+                    <a href="/categories/" class="footer-link">Categories</a>
+                    <a href="/archives/" class="footer-link">Archives</a>
+                    <a href="https://github.com/inyion" class="footer-link" target="_blank">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
+

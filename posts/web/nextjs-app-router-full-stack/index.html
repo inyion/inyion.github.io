@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next.js 14 App Router로 풀스택 웹 애플리케이션 만들기 | ChanDev</title>
+    <meta name="description" content="Server Components, Server Actions를 활용한 현대적인 웹 앱 개발">
+    <meta name="author" content="Chansaem Lee">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/modern.css">
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ChanDev</span>
+                </a>
+                <nav>
+                    <ul class="nav-menu" id="navMenu">
+                        <li><a href="/" class="nav-link">Home</a></li>
+                        <li><a href="/categories/" class="nav-link">Categories</a></li>
+                        <li><a href="/archives/" class="nav-link">Archives</a></li>
+                        <li><a href="/#about" class="nav-link">About</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="post-page">
+        <article>
+            <div class="post-header">
+                <div class="container">
+                    <span class="post-category web">
+                        <i class="fa-brands fa-react"></i> Frontend
+                    </span>
+                    <h1 class="post-title">Next.js 14 App Router로 풀스택 웹 애플리케이션 만들기</h1>
+                    <div class="post-meta">
+                        <span class="post-meta-item">
+                            <i class="fa fa-calendar"></i>
+                            2024년 9월 20일
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-clock"></i>
+                            20 min read
+                        </span>
+                        <span class="post-meta-item">
+                            <i class="fa fa-user"></i>
+                            Chansaem Lee
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                <div class="container container-narrow">
+                    <div class="post-body">
+                        <p>
+                            Next.js 14의 App Router는 React Server Components를 기반으로 한 
+                            새로운 패러다임을 제시합니다. 이 글에서는 <strong>풀스택 웹 애플리케이션</strong>을 
+                            처음부터 구축하는 과정을 다룹니다.
+                        </p>
+                        
+                        <h2>프로젝트 설정</h2>
+                        
+                        <pre><code class="language-bash"># 프로젝트 생성
+npx create-next-app@latest my-app --typescript --tailwind --eslint --app
+
+# 필요한 패키지 설치
+npm install prisma @prisma/client next-auth @auth/prisma-adapter
+npm install zod react-hook-form @hookform/resolvers
+npm install -D prisma</code></pre>
+                        
+                        <h3>프로젝트 구조</h3>
+                        
+                        <pre><code>📦 my-app
+├── 📁 app
+│   ├── 📁 (auth)
+│   │   ├── 📁 login
+│   │   └── 📁 register
+│   ├── 📁 (dashboard)
+│   │   ├── 📁 dashboard
+│   │   └── layout.tsx
+│   ├── 📁 api
+│   │   └── 📁 auth
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── globals.css
+├── 📁 components
+│   ├── 📁 ui
+│   └── 📁 forms
+├── 📁 lib
+│   ├── db.ts
+│   ├── auth.ts
+│   └── utils.ts
+├── 📁 actions
+│   └── user.ts
+└── 📁 prisma
+    └── schema.prisma</code></pre>
+                        
+                        <h2>데이터베이스 설정 (Prisma)</h2>
+                        
+                        <pre><code class="language-prisma">// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  image         String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  posts         Post[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  content     String?
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  author      User     @relation(fields: [authorId], references: [id])
+  authorId    String
+}
+
+enum Role {
+  USER
+  ADMIN
+}</code></pre>
+                        
+                        <pre><code class="language-typescript">// lib/db.ts
+import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
+}</code></pre>
+                        
+                        <h2>Server Components</h2>
+                        
+                        <pre><code class="language-typescript">// app/posts/page.tsx
+import { prisma } from '@/lib/db';
+import { PostCard } from '@/components/post-card';
+import { Suspense } from 'react';
+
+// 이 컴포넌트는 서버에서 실행됩니다
+export default async function PostsPage() {
+  const posts = await prisma.post.findMany({
+    where: { published: true },
+    include: { author: true },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return (
+    &lt;div className="container mx-auto py-8"&gt;
+      &lt;h1 className="text-3xl font-bold mb-8"&gt;Posts&lt;/h1&gt;
+      
+      &lt;Suspense fallback={&lt;PostsSkeleton /&gt;}&gt;
+        &lt;div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"&gt;
+          {posts.map((post) => (
+            &lt;PostCard key={post.id} post={post} /&gt;
+          ))}
+        &lt;/div&gt;
+      &lt;/Suspense&gt;
+    &lt;/div&gt;
+  );
+}
+
+// 동적 메타데이터
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const post = await prisma.post.findUnique({
+    where: { id: params.id },
+  });
+
+  return {
+    title: post?.title ?? 'Post Not Found',
+    description: post?.content?.slice(0, 160),
+  };
+}</code></pre>
+                        
+                        <h2>Server Actions</h2>
+                        
+                        <pre><code class="language-typescript">// actions/post.ts
+'use server';
+
+import { prisma } from '@/lib/db';
+import { auth } from '@/lib/auth';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { z } from 'zod';
+
+const createPostSchema = z.object({
+  title: z.string().min(1, '제목을 입력하세요').max(100),
+  content: z.string().min(1, '내용을 입력하세요'),
+});
+
+export type CreatePostState = {
+  errors?: {
+    title?: string[];
+    content?: string[];
+    _form?: string[];
+  };
+  success?: boolean;
+};
+
+export async function createPost(
+  prevState: CreatePostState,
+  formData: FormData
+): Promise&lt;CreatePostState&gt; {
+  const session = await auth();
+  
+  if (!session?.user?.id) {
+    return {
+      errors: { _form: ['로그인이 필요합니다'] },
+    };
+  }
+
+  const validatedFields = createPostSchema.safeParse({
+    title: formData.get('title'),
+    content: formData.get('content'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  try {
+    await prisma.post.create({
+      data: {
+        title: validatedFields.data.title,
+        content: validatedFields.data.content,
+        authorId: session.user.id,
+      },
+    });
+  } catch (error) {
+    return {
+      errors: { _form: ['포스트 생성에 실패했습니다'] },
+    };
+  }
+
+  revalidatePath('/posts');
+  redirect('/posts');
+}
+
+export async function deletePost(postId: string) {
+  const session = await auth();
+  
+  if (!session?.user?.id) {
+    throw new Error('Unauthorized');
+  }
+
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+  });
+
+  if (!post || post.authorId !== session.user.id) {
+    throw new Error('Forbidden');
+  }
+
+  await prisma.post.delete({
+    where: { id: postId },
+  });
+
+  revalidatePath('/posts');
+}
+
+export async function togglePublish(postId: string) {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+  });
+
+  if (!post) throw new Error('Post not found');
+
+  await prisma.post.update({
+    where: { id: postId },
+    data: { published: !post.published },
+  });
+
+  revalidatePath('/posts');
+  revalidatePath(`/posts/${postId}`);
+}</code></pre>
+                        
+                        <h2>Client Components & Forms</h2>
+                        
+                        <pre><code class="language-typescript">// components/forms/create-post-form.tsx
+'use client';
+
+import { useFormState, useFormStatus } from 'react-dom';
+import { createPost, CreatePostState } from '@/actions/post';
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  
+  return (
+    &lt;button
+      type="submit"
+      disabled={pending}
+      className="px-4 py-2 bg-blue-600 text-white rounded-md disabled:opacity-50"
+    &gt;
+      {pending ? '저장 중...' : '포스트 작성'}
+    &lt;/button&gt;
+  );
+}
+
+export function CreatePostForm() {
+  const initialState: CreatePostState = { errors: {} };
+  const [state, formAction] = useFormState(createPost, initialState);
+
+  return (
+    &lt;form action={formAction} className="space-y-4"&gt;
+      {state.errors?._form && (
+        &lt;div className="p-3 bg-red-100 text-red-700 rounded-md"&gt;
+          {state.errors._form.join(', ')}
+        &lt;/div&gt;
+      )}
+      
+      &lt;div&gt;
+        &lt;label htmlFor="title" className="block text-sm font-medium"&gt;
+          제목
+        &lt;/label&gt;
+        &lt;input
+          id="title"
+          name="title"
+          type="text"
+          className="mt-1 block w-full rounded-md border p-2"
+        /&gt;
+        {state.errors?.title && (
+          &lt;p className="text-red-500 text-sm"&gt;{state.errors.title[0]}&lt;/p&gt;
+        )}
+      &lt;/div&gt;
+      
+      &lt;div&gt;
+        &lt;label htmlFor="content" className="block text-sm font-medium"&gt;
+          내용
+        &lt;/label&gt;
+        &lt;textarea
+          id="content"
+          name="content"
+          rows={10}
+          className="mt-1 block w-full rounded-md border p-2"
+        /&gt;
+        {state.errors?.content && (
+          &lt;p className="text-red-500 text-sm"&gt;{state.errors.content[0]}&lt;/p&gt;
+        )}
+      &lt;/div&gt;
+      
+      &lt;SubmitButton /&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+                        
+                        <h2>인증 (NextAuth.js v5)</h2>
+                        
+                        <pre><code class="language-typescript">// lib/auth.ts
+import NextAuth from 'next-auth';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import Credentials from 'next-auth/providers/credentials';
+import { prisma } from './db';
+import bcrypt from 'bcryptjs';
+import { z } from 'zod';
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  session: { strategy: 'jwt' },
+  pages: {
+    signIn: '/login',
+  },
+  providers: [
+    Credentials({
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        const parsedCredentials = z
+          .object({
+            email: z.string().email(),
+            password: z.string().min(6),
+          })
+          .safeParse(credentials);
+
+        if (!parsedCredentials.success) return null;
+
+        const { email, password } = parsedCredentials.data;
+        
+        const user = await prisma.user.findUnique({
+          where: { email },
+        });
+
+        if (!user) return null;
+
+        const passwordsMatch = await bcrypt.compare(password, user.password);
+        if (!passwordsMatch) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        };
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role;
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.role = token.role as string;
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
+  },
+});
+
+// middleware.ts
+import { auth } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+
+export default auth((req) => {
+  const isLoggedIn = !!req.auth;
+  const isOnDashboard = req.nextUrl.pathname.startsWith('/dashboard');
+  
+  if (isOnDashboard && !isLoggedIn) {
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
+  
+  return NextResponse.next();
+});
+
+export const config = {
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+};</code></pre>
+                        
+                        <h2>Loading & Error UI</h2>
+                        
+                        <pre><code class="language-typescript">// app/posts/loading.tsx
+export default function Loading() {
+  return (
+    &lt;div className="container mx-auto py-8"&gt;
+      &lt;div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-8" /&gt;
+      &lt;div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"&gt;
+        {[...Array(6)].map((_, i) => (
+          &lt;div key={i} className="bg-gray-200 rounded-lg h-48 animate-pulse" /&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+// app/posts/error.tsx
+'use client';
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  return (
+    &lt;div className="flex flex-col items-center justify-center min-h-[400px]"&gt;
+      &lt;h2 className="text-2xl font-bold mb-4"&gt;문제가 발생했습니다&lt;/h2&gt;
+      &lt;p className="text-gray-600 mb-4"&gt;{error.message}&lt;/p&gt;
+      &lt;button
+        onClick={reset}
+        className="px-4 py-2 bg-blue-600 text-white rounded-md"
+      &gt;
+        다시 시도
+      &lt;/button&gt;
+    &lt;/div&gt;
+  );
+}
+
+// app/not-found.tsx
+import Link from 'next/link';
+
+export default function NotFound() {
+  return (
+    &lt;div className="flex flex-col items-center justify-center min-h-screen"&gt;
+      &lt;h1 className="text-6xl font-bold mb-4"&gt;404&lt;/h1&gt;
+      &lt;p className="text-xl text-gray-600 mb-8"&gt;페이지를 찾을 수 없습니다&lt;/p&gt;
+      &lt;Link href="/" className="text-blue-600 hover:underline"&gt;
+        홈으로 돌아가기
+      &lt;/Link&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+                        
+                        <h2>API Routes</h2>
+                        
+                        <pre><code class="language-typescript">// app/api/posts/route.ts
+import { prisma } from '@/lib/db';
+import { auth } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get('page') ?? '1');
+  const limit = parseInt(searchParams.get('limit') ?? '10');
+
+  const posts = await prisma.post.findMany({
+    where: { published: true },
+    include: { author: { select: { name: true, image: true } } },
+    skip: (page - 1) * limit,
+    take: limit,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const total = await prisma.post.count({ where: { published: true } });
+
+  return NextResponse.json({
+    posts,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
+}
+
+// app/api/posts/[id]/route.ts
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const post = await prisma.post.findUnique({
+    where: { id: params.id },
+    include: { author: true },
+  });
+
+  if (!post) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  return NextResponse.json(post);
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await auth();
+  
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  await prisma.post.delete({
+    where: { id: params.id },
+  });
+
+  return NextResponse.json({ success: true });
+}</code></pre>
+                        
+                        <h2>마무리</h2>
+                        
+                        <p>
+                            Next.js 14의 App Router는 풀스택 개발의 새로운 패러다임을 제시합니다. 
+                            Server Components로 초기 로딩 성능을 개선하고, Server Actions로 폼 처리를 간소화할 수 있습니다.
+                        </p>
+                        
+                        <div class="post-tags" style="margin-top: var(--space-2xl);">
+                            <span class="post-tag">#Next.js</span>
+                            <span class="post-tag">#App Router</span>
+                            <span class="post-tag">#Server Components</span>
+                            <span class="post-tag">#Prisma</span>
+                            <span class="post-tag">#Full Stack</span>
+                        </div>
+                        
+                        <div class="post-navigation">
+                            <a href="/posts/web/react-typescript-best-practices/" class="post-nav-item">
+                                <span class="post-nav-label">← Previous Article</span>
+                                <span class="post-nav-title">React + TypeScript 베스트 프랙티스</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text">© 2024 Chansaem Lee. Built with ❤️</p>
+                <div class="footer-links">
+                    <a href="/categories/" class="footer-link">Categories</a>
+                    <a href="/archives/" class="footer-link">Archives</a>
+                    <a href="https://github.com/inyion" class="footer-link" target="_blank">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
+
